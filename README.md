@@ -111,6 +111,10 @@ Les **11 tests d'origine** de l'application source ont été conservés et port�
 - **Limites fonctionnelles** : une seule devise (DZD), pas d'expiration des demandes de paiement, pas de litiges (chargebacks), pas de multi-organisation, pas de pagination serveur (tout est chargé en mémoire : adapté à quelques centaines de lignes).
 - **Accessibilité** : navigation clavier, libellés, rôles ARIA, lien d'évitement, gestion du focus ; audit automatisé axe-core sans violation ; contrastes du texte ≥ 4,5:1 (calculés sur la palette) et éléments graphiques ≥ 3:1. L'audit automatisé ne remplace pas un test avec un lecteur d'écran réel, non réalisé.
 
+## Contribuer
+
+Les tâches restantes (tests, recherche juridique, conception du backend, CI, démonstration…) sont listées dans [docs/TASKS.md](docs/TASKS.md) et suivies dans les [issues GitHub](https://github.com/SalimMabed/PSP/issues).
+
 ## Passer à un PSP de production
 
 Voir [docs/PRODUCTION-CHECKLIST.md](docs/PRODUCTION-CHECKLIST.md) (backend autoritaire, authentification/autorisation, idempotence persistante, journalisation, chiffrement, gestion des secrets, webhooks, rapprochement, anti-fraude, exigences légales et réglementaires applicables en Algérie) et [docs/API.md](docs/API.md) (contrat REST cible). Les exigences légales (autorisation d'exercer une activité de paiement, supervision bancaire, protection des données personnelles, sécurité des données de cartes) doivent être **vérifiées auprès des autorités et conseils compétents** : ce dépôt ne les établit pas.
