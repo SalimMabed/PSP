@@ -10,9 +10,9 @@ import { NOW } from "@/test/factories";
 import type { CreatePaymentInput } from "@/domain/validation";
 import type { Actor } from "@/domain/types";
 
-const admin: Actor = { name: "Amine Démo", role: "admin" };
-const operator: Actor = { name: "Lina Démo", role: "operator" };
-const checkout: Actor = { name: "Client (page de paiement)", role: "checkout" };
+const admin: Actor = { name: "Amine Demo", role: "admin" };
+const operator: Actor = { name: "Lina Demo", role: "operator" };
+const checkout: Actor = { name: "Customer (payment page)", role: "checkout" };
 
 let counter = 0;
 let api: LocalPspApi;
@@ -23,8 +23,8 @@ const input = (patch: Partial<CreatePaymentInput> = {}): CreatePaymentInput => (
   customer: { kind: "existing", id: "cus_001" },
   amount: 250_000,
   currency: "DZD",
-  orderRef: "CMD-TEST-1",
-  description: "Commande de test",
+  orderRef: "ORD-TEST-1",
+  description: "Test order",
   outcome: "created",
   ...patch,
 });
@@ -32,7 +32,7 @@ const input = (patch: Partial<CreatePaymentInput> = {}): CreatePaymentInput => (
 beforeEach(async () => {
   counter += 1;
   db = new PspDatabase(`psp-test-${counter}`);
-  // Horloge qui avance de 1 s à chaque lecture : ordre d'audit déterministe (pas d'égalité d'horodatage).
+  // Clock that advances by 1 s on every read: deterministic audit order (no timestamp ties).
   let tick = NOW;
   api = new LocalPspApi(db, () => (tick += 1000));
   await api.init();
@@ -43,19 +43,19 @@ async function expectDomainError(promise: Promise<unknown>, code: string) {
     () => null,
     (e: unknown) => e
   );
-  expect(isDomainError(err), `erreur attendue ${code}, reçu ${String(err)}`).toBe(true);
+  expect(isDomainError(err), `expected ${code}, got ${String(err)}`).toBe(true);
   expect((err as { code: string }).code).toBe(code);
 }
 
-describe("initialisation et persistance", () => {
-  it("charge le jeu de démonstration une seule fois, même si init est appelé deux fois en parallèle", async () => {
+describe("initialization and persistence", () => {
+  it("loads the demo dataset only once, even if init is called twice in parallel", async () => {
     const before = (await api.loadSnapshot()).transactions.length;
     await Promise.all([api.init(), api.init()]);
     expect((await api.loadSnapshot()).transactions.length).toBe(before);
     expect(before).toBeGreaterThan(200);
   });
 
-  it("les données persistent : une nouvelle instance sur la même base retrouve les modifications", async () => {
+  it("data persists: a new instance on the same database finds the changes", async () => {
     const tx = await api.createPayment(input(), { actor: admin });
     const api2 = new LocalPspApi(new PspDatabase(db.name), () => NOW + 3_600_000);
     await api2.init();
@@ -64,18 +64,18 @@ describe("initialisation et persistance", () => {
   });
 });
 
-describe("création de paiement", () => {
-  it("crée un paiement « créé » avec référence, jeton, historique et entrée d'audit", async () => {
+describe("payment creation", () => {
+  it("creates a \"created\" payment with reference, token, history and audit entry", async () => {
     const tx = await api.createPayment(input(), { actor: operator });
     expect(tx).toMatchObject({ status: "created", amount: 250_000, currency: "DZD", refunded: 0, method: null });
     expect(tx.reference).toMatch(/^PAY-[A-Z0-9]{8}$/);
     expect(tx.checkoutToken).toHaveLength(24);
     expect(tx.history).toHaveLength(1);
     const snap = await api.loadSnapshot();
-    expect(snap.auditLogs[0]).toMatchObject({ action: "payment.created", actor: "Lina Démo", entityId: tx.id });
+    expect(snap.auditLogs[0]).toMatchObject({ action: "payment.created", actor: "Lina Demo", entityId: tx.id });
   });
 
-  it("applique le résultat simulé à la création (réussi → commission, échec → motif)", async () => {
+  it("applies the simulated outcome at creation (succeeded → fee, failed → reason)", async () => {
     const ok = await api.createPayment(input({ outcome: "succeeded", method: "cib_sandbox" }), { actor: admin });
     expect(ok).toMatchObject({ status: "succeeded", method: "cib_sandbox" });
     expect(ok.fee).toBeGreaterThan(0);
@@ -84,7 +84,7 @@ describe("création de paiement", () => {
     expect(ko).toMatchObject({ status: "failed", failureReason: "card_declined" });
   });
 
-  it("est idempotent : la même clé ne crée qu'un seul paiement (double clic)", async () => {
+  it("is idempotent: the same key creates only one payment (double click)", async () => {
     const ctx = { actor: admin, idempotencyKey: "idem_double_click" };
     const before = (await api.loadSnapshot()).transactions.length;
     const [a, b, c] = await Promise.all([api.createPayment(input(), ctx), api.createPayment(input(), ctx), api.createPayment(input(), ctx)]);
@@ -92,14 +92,14 @@ describe("création de paiement", () => {
     expect((await api.loadSnapshot()).transactions.length).toBe(before + 1);
   });
 
-  it("deux clés différentes créent deux paiements distincts", async () => {
+  it("two different keys create two distinct payments", async () => {
     const a = await api.createPayment(input(), { actor: admin, idempotencyKey: "k1" });
     const b = await api.createPayment(input(), { actor: admin, idempotencyKey: "k2" });
     expect(a.id).not.toBe(b.id);
     expect(a.reference).not.toBe(b.reference);
   });
 
-  it("réutilise un client existant de même e-mail au lieu de dupliquer", async () => {
+  it("reuses an existing customer with the same email instead of duplicating", async () => {
     const before = (await api.loadSnapshot()).customers.length;
     const newCustomer = { kind: "new" as const, name: "Nadia Test", email: "nadia.test@client-demo.example" };
     const a = await api.createPayment(input({ customer: newCustomer }), { actor: admin });
@@ -108,29 +108,29 @@ describe("création de paiement", () => {
     expect((await api.loadSnapshot()).customers.length).toBe(before + 1);
   });
 
-  it("refuse un commerçant inactif, inconnu, un montant hors limites et un numéro de carte", async () => {
-    await expectDomainError(api.createPayment(input({ merchantId: "mrc_008" }), { actor: admin }), "MERCHANT_INACTIVE"); // suspendu
-    await expectDomainError(api.createPayment(input({ merchantId: "mrc_005" }), { actor: admin }), "MERCHANT_INACTIVE"); // en revue
+  it("rejects an inactive or unknown merchant, an out-of-range amount and a card number", async () => {
+    await expectDomainError(api.createPayment(input({ merchantId: "mrc_008" }), { actor: admin }), "MERCHANT_INACTIVE"); // suspended
+    await expectDomainError(api.createPayment(input({ merchantId: "mrc_005" }), { actor: admin }), "MERCHANT_INACTIVE"); // under review
     await expectDomainError(api.createPayment(input({ merchantId: "nope" }), { actor: admin }), "NOT_FOUND");
     await expectDomainError(api.createPayment(input({ amount: 10 }), { actor: admin }), "INVALID_AMOUNT");
     await expectDomainError(api.createPayment(input({ amount: 999_999_999_999 }), { actor: admin }), "INVALID_AMOUNT");
-    await expectDomainError(api.createPayment(input({ description: "carte 4111 1111 1111 1111" }), { actor: admin }), "VALIDATION");
+    await expectDomainError(api.createPayment(input({ description: "card 4111 1111 1111 1111" }), { actor: admin }), "VALIDATION");
   });
 });
 
-describe("simulation du cycle de paiement", () => {
-  it("créé → en attente → réussi, sans doublon d'historique si l'action est répétée", async () => {
+describe("payment lifecycle simulation", () => {
+  it("created → pending → succeeded, with no duplicate history entry if the action is repeated", async () => {
     const tx = await api.createPayment(input(), { actor: admin });
     const pending = await api.simulateOutcome(tx.id, { to: "pending", method: "wallet_sandbox" }, { actor: checkout });
     expect(pending.status).toBe("pending");
     const paid = await api.simulateOutcome(tx.id, { to: "succeeded" }, { actor: checkout });
-    const again = await api.simulateOutcome(tx.id, { to: "succeeded" }, { actor: checkout }); // rejeu sans clé
+    const again = await api.simulateOutcome(tx.id, { to: "succeeded" }, { actor: checkout }); // replay without a key
     expect(paid.status).toBe("succeeded");
     expect(again.history).toHaveLength(paid.history.length);
     expect(paid.history.map((h) => h.to)).toEqual(["created", "pending", "succeeded"]);
   });
 
-  it("un rejeu avec la même clé d'idempotence n'écrit rien de plus", async () => {
+  it("a replay with the same idempotency key writes nothing more", async () => {
     const tx = await api.createPayment(input(), { actor: admin });
     const ctx = { actor: checkout, idempotencyKey: "pay-click" };
     const outcome = { to: "succeeded" as const, method: "cib_sandbox" as const };
@@ -141,28 +141,28 @@ describe("simulation du cycle de paiement", () => {
     expect(snap.auditLogs.filter((a) => a.entityId === tx.id && a.action === "payment.status_changed")).toHaveLength(1);
   });
 
-  it("refuse les transitions illégales (échoué → réussi, annulé → en attente, vers « remboursé »)", async () => {
+  it("rejects illegal transitions (failed → succeeded, cancelled → pending, towards \"refunded\")", async () => {
     const failed = await api.createPayment(input({ outcome: "failed", method: "cib_sandbox" }), { actor: admin });
     await expectDomainError(api.simulateOutcome(failed.id, { to: "succeeded", method: "cib_sandbox" }, { actor: admin }), "INVALID_TRANSITION");
     const cancelled = await api.simulateOutcome((await api.createPayment(input(), { actor: admin })).id, { to: "cancelled" }, { actor: admin });
     await expectDomainError(api.simulateOutcome(cancelled.id, { to: "pending", method: "cib_sandbox" }, { actor: admin }), "INVALID_TRANSITION");
   });
 
-  it("n'encaisse pas pour un commerçant suspendu", async () => {
+  it("does not collect for a suspended merchant", async () => {
     const snap = await api.loadSnapshot();
     const onSuspended = snap.transactions.find((t) => t.merchantId === "mrc_008" && t.status === "failed");
-    expect(onSuspended).toBeUndefined(); // la donnée de démo ne doit pas être ouvrable
+    expect(onSuspended).toBeUndefined(); // the demo data must not be openable
     const open = snap.transactions.find((t) => t.merchantId === "mrc_005" && (t.status === "pending" || t.status === "created"));
     if (open) await expectDomainError(api.simulateOutcome(open.id, { to: "succeeded", method: "cib_sandbox" }, { actor: admin }), "MERCHANT_INACTIVE");
   });
 });
 
-describe("remboursements", () => {
+describe("refunds", () => {
   async function paidTx(amount = 500_000) {
     return api.createPayment(input({ amount, outcome: "succeeded", method: "cib_sandbox" }), { actor: admin });
   }
 
-  it("partiel puis total : statuts, cumul et audit cohérents", async () => {
+  it("partial then full: consistent statuses, cumulative amount and audit", async () => {
     const tx = await paidTx();
     const r1 = await api.refundPayment(tx.id, { amount: 200_000, reason: "customer_request" }, { actor: operator });
     expect(r1.transaction).toMatchObject({ status: "partially_refunded", refunded: 200_000 });
@@ -174,15 +174,15 @@ describe("remboursements", () => {
     expect(snap.auditLogs.filter((a) => a.action === "refund.created" && a.summary.includes(tx.reference))).toHaveLength(2);
   });
 
-  it("refuse de dépasser le montant remboursable, même en deux fois", async () => {
+  it("refuses to exceed the refundable amount, even in two steps", async () => {
     const tx = await paidTx();
-    await api.refundPayment(tx.id, { amount: 400_000, reason: "other", note: "geste" }, { actor: admin });
-    await expectDomainError(api.refundPayment(tx.id, { amount: 100_001, reason: "other", note: "geste" }, { actor: admin }), "REFUND_EXCEEDS_REMAINING");
+    await api.refundPayment(tx.id, { amount: 400_000, reason: "other", note: "goodwill" }, { actor: admin });
+    await expectDomainError(api.refundPayment(tx.id, { amount: 100_001, reason: "other", note: "goodwill" }, { actor: admin }), "REFUND_EXCEEDS_REMAINING");
     const stored = (await api.loadSnapshot()).transactions.find((t) => t.id === tx.id)!;
     expect(stored.refunded).toBe(400_000);
   });
 
-  it("est idempotent : un double clic avec la même clé ne rembourse qu'une fois", async () => {
+  it("is idempotent: a double click with the same key refunds only once", async () => {
     const tx = await paidTx();
     const ctx = { actor: admin, idempotencyKey: "refund-click" };
     const [a, b] = await Promise.all([
@@ -194,26 +194,26 @@ describe("remboursements", () => {
     expect(stored.refunded).toBe(100_000);
   });
 
-  it("refuse le remboursement d'un paiement non encaissé", async () => {
+  it("refuses to refund an uncollected payment", async () => {
     const created = await api.createPayment(input(), { actor: admin });
     await expectDomainError(api.refundPayment(created.id, { amount: 1_000, reason: "other", note: "x y z" }, { actor: admin }), "NOT_REFUNDABLE");
   });
 
-  it("plafonne l'opérateur ; l'administrateur n'a pas de plafond", async () => {
+  it("caps the operator; the administrator has no ceiling", async () => {
     const big = await paidTx(MAX_REFUND_OPERATOR * 3);
     await expectDomainError(api.refundPayment(big.id, { amount: MAX_REFUND_OPERATOR + 100, reason: "duplicate" }, { actor: operator }), "FORBIDDEN");
     const res = await api.refundPayment(big.id, { amount: MAX_REFUND_OPERATOR + 100, reason: "duplicate" }, { actor: admin });
     expect(res.transaction.status).toBe("partially_refunded");
   });
 
-  it("refuse un commentaire contenant un numéro de carte", async () => {
+  it("refuses a comment containing a card number", async () => {
     const tx = await paidTx();
     await expectDomainError(api.refundPayment(tx.id, { amount: 1_000, reason: "other", note: "4111 1111 1111 1111" }, { actor: admin }), "VALIDATION");
   });
 });
 
-describe("règlements simulés", () => {
-  it("génère un lot par commerçant actif et garde le grand livre cohérent à chaque étape", async () => {
+describe("simulated settlements", () => {
+  it("generates one batch per active merchant and keeps the ledger consistent at every step", async () => {
     const check = async () => {
       const s = await api.loadSnapshot();
       const l = computeLedger(s.transactions, s.refunds, s.settlements);
@@ -225,11 +225,11 @@ describe("règlements simulés", () => {
 
     const run = await api.generateSettlements({ actor: admin });
     expect(run.created.length).toBeGreaterThan(0);
-    expect(run.skipped.some((s) => s.merchantId === "mrc_008")).toBe(true); // suspendu : règlements suspendus
+    expect(run.skipped.some((s) => s.merchantId === "mrc_008")).toBe(true); // suspended: settlements suspended
     const mid = await check();
     expect(mid.inFlight).toBeGreaterThan(before.inFlight);
 
-    // un 2e déclenchement immédiat ne trouve plus rien à régler
+    // a 2nd immediate run finds nothing left to settle
     const second = await api.generateSettlements({ actor: admin });
     expect(second.created).toEqual([]);
 
@@ -245,7 +245,7 @@ describe("règlements simulés", () => {
     expect(end.unbatched).toBeGreaterThan(0);
   });
 
-  it("un remboursement postérieur au lot est reporté comme ajustement dans le lot suivant", async () => {
+  it("a refund recorded after the batch is carried as an adjustment in the next batch", async () => {
     const tx = await api.createPayment(input({ amount: 800_000, outcome: "succeeded", method: "cib_sandbox" }), { actor: admin });
     const run = await api.generateSettlements({ actor: admin }, tx.merchantId);
     expect(run.created).toHaveLength(1);
@@ -259,13 +259,13 @@ describe("règlements simulés", () => {
     expect(l.settled + l.inFlight + l.unbatched).toBe(l.net);
   });
 
-  it("l'opérateur ne peut pas gérer les règlements", async () => {
+  it("the operator cannot manage settlements", async () => {
     await expectDomainError(api.generateSettlements({ actor: operator }), "FORBIDDEN");
   });
 });
 
-describe("indicateurs cohérents après chaque action", () => {
-  it("les agrégats reflètent exactement les actions effectuées", async () => {
+describe("consistent indicators after every action", () => {
+  it("the aggregates exactly reflect the actions performed", async () => {
     const base = summarize((await api.loadSnapshot()).transactions);
     const tx = await api.createPayment(input({ amount: 400_000, outcome: "succeeded", method: "cib_sandbox" }), { actor: admin });
     let s = summarize((await api.loadSnapshot()).transactions);
@@ -275,43 +275,43 @@ describe("indicateurs cohérents après chaque action", () => {
 
     await api.refundPayment(tx.id, { amount: 150_000, reason: "customer_request" }, { actor: admin });
     s = summarize((await api.loadSnapshot()).transactions);
-    expect(s.volume).toBe(base.volume + 400_000); // le volume brut ne bouge pas
+    expect(s.volume).toBe(base.volume + 400_000); // the gross volume does not move
     expect(s.refundedAmount).toBe(base.refundedAmount + 150_000);
     expect(s.netVolume).toBe(s.volume - s.refundedAmount);
     expect(s.refundedCount).toBe(base.refundedCount + 1);
   });
 });
 
-describe("permissions, paramètres et réinitialisation", () => {
-  it("l'opérateur ne peut ni modifier l'organisation ni réinitialiser la démo", async () => {
+describe("permissions, settings and reset", () => {
+  it("the operator can neither edit the organization nor reset the demo", async () => {
     const org = (await api.loadSnapshot()).settings.organization;
-    await expectDomainError(api.updateOrganization({ ...org, name: "Pirate" }, { actor: operator }), "FORBIDDEN");
+    await expectDomainError(api.updateOrganization({ ...org, name: "Intruder" }, { actor: operator }), "FORBIDDEN");
     await expectDomainError(api.resetDemo({ actor: operator }), "FORBIDDEN");
   });
 
-  it("le client de la page de paiement ne peut pas créer de paiement ni rembourser", async () => {
+  it("the payment-page customer can neither create a payment nor refund", async () => {
     await expectDomainError(api.createPayment(input(), { actor: checkout }), "FORBIDDEN");
     const tx = await api.createPayment(input({ outcome: "succeeded", method: "cib_sandbox" }), { actor: admin });
     await expectDomainError(api.refundPayment(tx.id, { amount: 1_000, reason: "duplicate" }, { actor: checkout }), "FORBIDDEN");
   });
 
-  it("met à jour l'organisation avec validation et journal d'audit", async () => {
+  it("updates the organization with validation and audit log", async () => {
     const org = (await api.loadSnapshot()).settings.organization;
-    await api.updateOrganization({ ...org, name: "Nouveau nom" }, { actor: admin });
+    await api.updateOrganization({ ...org, name: "New name" }, { actor: admin });
     const snap = await api.loadSnapshot();
-    expect(snap.settings.organization.name).toBe("Nouveau nom");
+    expect(snap.settings.organization.name).toBe("New name");
     expect(snap.auditLogs[0].action).toBe("settings.updated");
     await expectDomainError(api.updateOrganization({ ...org, email: "x" }, { actor: admin }), "VALIDATION");
   });
 
-  it("journalise le changement de rôle et le persiste", async () => {
+  it("logs the role change and persists it", async () => {
     await api.switchRole("operator", { actor: admin });
     const snap = await api.loadSnapshot();
     expect(snap.settings.currentRole).toBe("operator");
     expect(snap.auditLogs[0]).toMatchObject({ action: "role.switched" });
   });
 
-  it("la réinitialisation restaure exactement le jeu d'origine et journalise l'action", async () => {
+  it("the reset restores exactly the original dataset and logs the action", async () => {
     const pristine = await api.loadSnapshot();
     await api.createPayment(input({ outcome: "succeeded", method: "cib_sandbox" }), { actor: admin });
     await api.switchRole("operator", { actor: admin });
@@ -320,12 +320,12 @@ describe("permissions, paramètres et réinitialisation", () => {
     expect(after.transactions.map((t) => t.id).sort()).toEqual(pristine.transactions.map((t) => t.id).sort());
     expect(after.settings.currentRole).toBe("admin");
     expect(after.auditLogs.some((a) => a.action === "demo.reset")).toBe(true);
-    // une clé d'idempotence d'avant la réinitialisation ne bloque pas une nouvelle action
+    // an idempotency key from before the reset does not block a new action
     const again = await api.createPayment(input(), { actor: admin, idempotencyKey: "post-reset" });
     expect(again.status).toBe("created");
   });
 
-  it("enregistre un export CSV dans l'audit", async () => {
+  it("records a CSV export in the audit log", async () => {
     await api.recordExport(12, { actor: operator });
     expect((await api.loadSnapshot()).auditLogs[0]).toMatchObject({ action: "export.csv" });
   });

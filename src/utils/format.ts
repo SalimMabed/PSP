@@ -1,4 +1,4 @@
-/** « 0550000001 » → « 05 50 00 00 01 » ; « +213550000001 » → « +213 550 00 00 01 ». */
+/** "0550000001" → "05 50 00 00 01"; "+213550000001" → "+213 550 00 00 01". */
 export function formatPhone(raw: string | undefined): string {
   if (!raw) return "—";
   const digits = raw.replace(/[\s.-]/g, "");
@@ -12,13 +12,13 @@ export function initials(name: string): string {
   return ((parts[0]?.[0] ?? "") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
 }
 
-/** « 3 transactions », « 1 transaction », « aucune transaction ». */
+/** "3 transactions", "1 transaction", "no transactions". */
 export function plural(n: number, one: string, many: string = `${one}s`, none?: string): string {
   if (n === 0 && none) return none;
   return `${n.toLocaleString("fr-FR")} ${n > 1 ? many : one}`;
 }
 
-/** Déclenche le téléchargement d'un contenu texte côté navigateur. */
+/** Triggers the download of text content in the browser. */
 export function downloadTextFile(filename: string, content: string, mime = "text/csv;charset=utf-8"): void {
   const blob = new Blob([content], { type: mime });
   const url = URL.createObjectURL(blob);
@@ -28,6 +28,6 @@ export function downloadTextFile(filename: string, content: string, mime = "text
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  // Révocation différée : certains navigateurs ont besoin d'un tick pour démarrer le téléchargement.
+  // Deferred revocation: some browsers need a tick to start the download.
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

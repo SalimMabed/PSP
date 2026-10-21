@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { Icon, type IconName } from "./Icon";
 
-/** Carte avec en-tête optionnel (titre, description, actions). */
+/** Card with an optional header (title, description, actions). */
 export function Section({
   title,
   description,
@@ -65,7 +65,7 @@ export function KpiCard({
   sub?: ReactNode;
   icon: IconName;
   tone?: KpiTone;
-  /** Variation en % vs période précédente (undefined = masquée). */
+  /** Variation in % vs the previous period (undefined = hidden). */
   delta?: number | null;
   href?: ReactNode;
 }) {
@@ -88,7 +88,7 @@ export function KpiCard({
 }
 
 export function Delta({ value, invert = false }: { value: number | null; invert?: boolean }) {
-  if (value === null) return <span className="text-ink-muted">Pas de base de comparaison</span>;
+  if (value === null) return <span className="text-ink-muted">No comparison baseline</span>;
   const up = value > 0;
   const flat = value === 0;
   const good = flat ? null : invert ? !up : up;
@@ -98,7 +98,7 @@ export function Delta({ value, invert = false }: { value: number | null; invert?
       <Icon name={flat ? "sort-both" : up ? "sort-up" : "sort-down"} size={13} />
       {up ? "+" : value < 0 ? "−" : ""}
       {Math.abs(value).toLocaleString("fr-FR", { maximumFractionDigits: 1 })}&nbsp;%
-      <span className="sr-only"> par rapport à la période précédente</span>
+      <span className="sr-only"> compared with the previous period</span>
     </span>
   );
 }
@@ -117,7 +117,7 @@ export function DefinitionList({ items, columns = 2 }: { items: { label: string;
   );
 }
 
-export function CopyButton({ value, label = "Copier", copiedLabel = "Copié" }: { value: string; label?: string; copiedLabel?: string }) {
+export function CopyButton({ value, label = "Copy", copiedLabel = "Copied" }: { value: string; label?: string; copiedLabel?: string }) {
   const [copied, setCopied] = useState(false);
   const timer = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(timer.current), []);
@@ -126,7 +126,7 @@ export function CopyButton({ value, label = "Copier", copiedLabel = "Copié" }: 
     try {
       await navigator.clipboard.writeText(value);
     } catch {
-      // Contexte non sécurisé ou permission refusée : repli par sélection temporaire.
+      // Insecure context or permission denied: fall back to a temporary selection.
       const area = document.createElement("textarea");
       area.value = value;
       area.setAttribute("readonly", "");
@@ -151,9 +151,9 @@ export function CopyButton({ value, label = "Copier", copiedLabel = "Copié" }: 
         <Icon name={copied ? "check" : "copy"} size={14} />
         {copied ? copiedLabel : label}
       </button>
-      {/* Zone live séparée du bouton : le nom accessible du bouton reste son libellé. */}
+      {/* Live region separate from the button: the button's accessible name stays its label. */}
       <span role="status" className="sr-only">
-        {copied ? "Copié dans le presse-papiers" : ""}
+        {copied ? "Copied to the clipboard" : ""}
       </span>
     </>
   );
@@ -169,7 +169,7 @@ export function CodeBlock({ code, label, language }: { code: string; label: stri
         </span>
         <CopyButton value={code} />
       </figcaption>
-      <pre className="m-0 overflow-x-auto p-3.5 text-[12.5px] leading-relaxed" tabIndex={0} aria-label={`Code : ${label}`}>
+      <pre className="m-0 overflow-x-auto p-3.5 text-[12.5px] leading-relaxed" tabIndex={0} aria-label={`Code: ${label}`}>
         <code>{code}</code>
       </pre>
     </figure>
@@ -181,9 +181,9 @@ export interface TabDef {
   label: string;
 }
 
-/** Onglets accessibles (rôle tablist, flèches clavier). Le contenu est géré par l'appelant. */
+/** Accessible tabs (tablist role, arrow-key navigation). Content is handled by the caller. */
 export function Tabs({ tabs, active, onChange, label }: { tabs: TabDef[]; active: string; onChange: (id: string) => void; label: string }) {
-  // Sur mobile la liste défile : rend l'onglet actif visible (ex. ouverture directe sur ?tab=audit).
+  // On mobile the list scrolls: makes the active tab visible (e.g. when opening ?tab=audit directly).
   useEffect(() => {
     document.getElementById(`tab-${active}`)?.scrollIntoView?.({ block: "nearest", inline: "center" });
   }, [active]);
@@ -224,7 +224,7 @@ export function Tabs({ tabs, active, onChange, label }: { tabs: TabDef[]; active
   );
 }
 
-/** Notice d'avertissement / d'information réutilisable. */
+/** Reusable warning / information notice. */
 export function Notice({
   tone = "info",
   title,

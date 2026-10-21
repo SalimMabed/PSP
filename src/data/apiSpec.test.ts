@@ -7,35 +7,35 @@ import { DEMO_API_KEYS } from "@/domain/webhook";
 const doc = readFileSync("docs/API.md", "utf8");
 const readme = readFileSync("README.md", "utf8");
 
-describe("spécification d'API illustrative ↔ documentation", () => {
-  it("chaque endpoint de la page développeur figure dans docs/API.md", () => {
+describe("illustrative API specification ↔ documentation", () => {
+  it("every endpoint of the developer page appears in docs/API.md", () => {
     for (const e of ENDPOINTS) expect(doc, `${e.method} ${e.path}`).toContain(`\`${e.method} ${e.path}\``);
   });
 
-  it("chaque événement webhook et chaque code d'erreur est documenté", () => {
+  it("every webhook event and every error code is documented", () => {
     for (const ev of WEBHOOK_EVENTS) expect(doc, ev.type).toContain(ev.type);
     for (const c of ERROR_CODES) expect(doc, c.code).toContain(c.code);
   });
 
-  it("la table des transitions documentée correspond à la machine d'états du code", () => {
+  it("the documented transition table matches the code's state machine", () => {
     for (const s of ALL_STATUSES) {
       for (const to of ALLOWED_TRANSITIONS[s]) {
         const row = doc.split("\n").find((l) => l.startsWith(`| \`${s}\``));
         if (s === "failed" || s === "cancelled" || s === "refunded") continue;
-        expect(row, `ligne de ${s}`).toBeDefined();
+        expect(row, `row of ${s}`).toBeDefined();
         expect(row!, `${s} → ${to}`).toContain(`\`${to}\``);
       }
     }
   });
 
-  it("les clés affichées sont fictives et la documentation le dit", () => {
+  it("the displayed keys are fictitious and the documentation says so", () => {
     for (const k of Object.values(DEMO_API_KEYS)) expect(doc).toContain(k);
-    expect(doc).toMatch(/non impl[ée]ment[ée]e/i);
-    expect(doc).toMatch(/fictives/i);
+    expect(doc).toMatch(/not implemented/i);
+    expect(doc).toMatch(/fictitious/i);
   });
 
-  it("le README annonce clairement l'absence de paiement réel et d'agrément", () => {
-    expect(readme).toMatch(/Aucun paiement réel/i);
-    expect(readme).toMatch(/Aucun agrément/i);
+  it("the README clearly states there is no real payment and no license", () => {
+    expect(readme).toMatch(/No real payment/i);
+    expect(readme).toMatch(/No license/i);
   });
 });

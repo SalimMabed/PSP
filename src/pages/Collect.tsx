@@ -18,7 +18,7 @@ import { usePspStore } from "@/store/usePspStore";
 const checkoutUrl = (t: Transaction) => `${window.location.origin}/pay/${t.checkoutToken}`;
 
 export function Collect() {
-  useDocumentTitle("Encaissement");
+  useDocumentTitle("Collect payments");
   const data = useData();
   const lookup = useLookup();
   const role = useRole();
@@ -26,7 +26,7 @@ export function Collect() {
   const [created, setCreated] = useState<Transaction | null>(null);
   const [params] = useSearchParams();
 
-  // Préremplissage depuis une fiche client / commerçant (?customer=…&merchant=…).
+  // Prefill from a customer / merchant profile (?customer=…&merchant=…).
   const defaults = useMemo<Partial<PaymentFormValues>>(() => {
     const customerId = params.get("customer");
     const merchantId = params.get("merchant");
@@ -51,43 +51,43 @@ export function Collect() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <h2 id="created-title" className="text-[17px] font-semibold">
-                    Demande de paiement créée
+                    Payment request created
                   </h2>
                   <p className="m-0 mt-1 text-[14px] text-ink-muted">
-                    Référence <strong className="num text-ink">{created.reference}</strong> · {formatDA(created.amount)} · statut{" "}
+                    Reference <strong className="num text-ink">{created.reference}</strong> · {formatDA(created.amount)} · status{" "}
                     <StatusBadge status={created.status} />
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <code className="num max-w-full truncate rounded-md bg-ivory-soft px-2 py-1 text-[12.5px]">{checkoutUrl(created)}</code>
-                    <CopyButton value={checkoutUrl(created)} label="Copier le lien" />
+                    <CopyButton value={checkoutUrl(created)} label="Copy the link" />
                   </div>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <LinkButton to={`/pay/${created.checkoutToken}`} variant="primary" icon="external">
-                      Ouvrir la page de paiement
+                      Open the payment page
                     </LinkButton>
-                    <LinkButton to={`/transactions/${created.id}`}>Voir la fiche transaction</LinkButton>
+                    <LinkButton to={`/transactions/${created.id}`}>View the transaction</LinkButton>
                   </div>
                 </div>
               </div>
             </section>
           )}
 
-          <Section title="Nouvelle demande de paiement" description="Le client règle sur une page de paiement hébergée de démonstration (aucune donnée bancaire).">
+          <Section title="New payment request" description="The customer pays on a demonstration hosted payment page (no banking data).">
             {canCreate ? (
               <PaymentForm key={JSON.stringify(defaults)} mode="request" defaults={defaults} onCreated={setCreated} />
             ) : (
-              <Notice tone="warning" title="Action non autorisée">
-                Votre rôle ne permet pas de créer des demandes de paiement.
+              <Notice tone="warning" title="Action not allowed">
+                Your role does not allow creating payment requests.
               </Notice>
             )}
           </Section>
         </div>
 
         <div className="space-y-6">
-          <Section title="À encaisser" description="Demandes créées ou en attente" bodyClassName="p-0">
+          <Section title="To collect" description="Created or pending requests" bodyClassName="p-0">
             {open.length === 0 ? (
-              <EmptyState icon="clock" title="Rien en attente">
-                Les demandes non réglées apparaîtront ici.
+              <EmptyState icon="clock" title="Nothing pending">
+                Unpaid requests will appear here.
               </EmptyState>
             ) : (
               <ul className="m-0 list-none divide-y divide-ivory-line p-0">
@@ -109,9 +109,9 @@ export function Collect() {
                     </div>
                     <div className="mt-2 flex flex-wrap gap-2">
                       <LinkButton to={`/pay/${t.checkoutToken}`} size="sm" icon="external">
-                        Page de paiement
+                        Payment page
                       </LinkButton>
-                      <CopyButton value={checkoutUrl(t)} label="Copier le lien" />
+                      <CopyButton value={checkoutUrl(t)} label="Copy the link" />
                     </div>
                   </li>
                 ))}
@@ -119,13 +119,13 @@ export function Collect() {
             )}
           </Section>
 
-          <Section title="Comment ça marche ?">
+          <Section title="How does it work?">
             <DefinitionList
               columns={1}
               items={[
-                { label: "1. Création", value: "Vous saisissez le montant, la commande et le client. La demande passe à l'état « Créé »." },
-                { label: "2. Paiement hébergé", value: "Le client ouvre le lien et choisit une méthode sandbox. Aucun numéro de carte n'est demandé." },
-                { label: "3. Résultat simulé", value: "Succès, refus, attente ou annulation : le statut et les indicateurs se mettent à jour." },
+                { label: "1. Creation", value: "You enter the amount, the order and the customer. The request moves to the \"Created\" state." },
+                { label: "2. Hosted payment", value: "The customer opens the link and chooses a sandbox method. No card number is requested." },
+                { label: "3. Simulated outcome", value: "Success, decline, pending or cancellation: the status and the indicators are updated." },
               ]}
             />
           </Section>

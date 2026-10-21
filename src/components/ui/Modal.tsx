@@ -14,11 +14,11 @@ interface ModalProps {
   children: ReactNode;
   footer?: ReactNode;
   size?: "md" | "lg";
-  /** false = ni Échap ni clic extérieur ne ferment (action en cours). */
+  /** false = neither Escape nor an outside click closes the dialog (action in progress). */
   dismissible?: boolean;
 }
 
-/** Boîte de dialogue accessible : piège de focus, Échap, restauration du focus, défilement verrouillé. */
+/** Accessible dialog: focus trap, Escape, focus restoration, scroll lock. */
 export function Modal({ open, onClose, title, description, children, footer, size = "md", dismissible = true }: ModalProps) {
   const titleId = useId();
   const descId = useId();
@@ -99,7 +99,7 @@ export function Modal({ open, onClose, title, description, children, footer, siz
             )}
           </div>
           {dismissible && (
-            <button type="button" onClick={onClose} aria-label="Fermer la fenêtre" className="btn btn-ghost btn-sm -mr-2 -mt-1 !min-h-0 !p-1.5">
+            <button type="button" onClick={onClose} aria-label="Close the dialog" className="btn btn-ghost btn-sm -mr-2 -mt-1 !min-h-0 !p-1.5">
               <Icon name="x" size={18} />
             </button>
           )}
@@ -134,7 +134,7 @@ export function ConfirmDialog({ open, title, message, confirmLabel, tone = "prim
       footer={
         <>
           <Button onClick={onCancel} disabled={busy}>
-            Annuler
+            Cancel
           </Button>
           <Button variant={tone === "danger" ? "accent" : "primary"} onClick={onConfirm} loading={busy} data-autofocus>
             {confirmLabel}

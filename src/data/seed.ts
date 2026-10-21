@@ -19,14 +19,14 @@ import type {
 } from "@/domain/types";
 
 /**
- * Données de démonstration REPRODUCTIBLES : pour un même instant `now`, `generateSeed` produit
- * exactement le même jeu (PRNG à graine fixe, identifiants déterministes). Toutes les personnes,
- * entreprises, e-mails (domaines réservés .example) et numéros sont FICTIFS.
+ * REPRODUCIBLE demo data: for the same instant `now`, `generateSeed` produces exactly the same
+ * dataset (fixed-seed PRNG, deterministic identifiers). All people, companies, emails (reserved
+ * .example domains) and phone numbers are FICTITIOUS.
  */
 export const SEED_VERSION = 1;
 const SEED = 20261019;
 
-// ---------- PRNG déterministe ----------
+// ---------- Deterministic PRNG ----------
 
 function mulberry32(seed: number): () => number {
   let a = seed >>> 0;
@@ -62,45 +62,45 @@ class Rng {
   bytes: RandomBytes = (length) => Uint8Array.from({ length }, () => Math.floor(this.next() * 256));
 }
 
-// ---------- Référentiels fictifs ----------
+// ---------- Fictitious reference data ----------
 
 const MERCHANT_DEFS: Omit<Merchant, "id" | "createdAt">[] = [
-  { name: "Librairie Les Dunes", legalName: "SARL Les Dunes Édition (fictive)", category: "Librairie", city: "Alger", email: "contact@librairie-dunes.example", status: "active", feeBps: 190, settlementCycleDays: 2 },
-  { name: "Maison Zéphyr Mode", legalName: "EURL Zéphyr (fictive)", category: "Mode", city: "Oran", email: "contact@zephyr-mode.example", status: "active", feeBps: 210, settlementCycleDays: 2 },
-  { name: "TechNova Alger", legalName: "SPA TechNova (fictive)", category: "Électronique", city: "Alger", email: "contact@technova.example", status: "active", feeBps: 175, settlementCycleDays: 3 },
-  { name: "Épicerie du Tassili", legalName: "SARL Tassili Gourmet (fictive)", category: "Alimentation", city: "Constantine", email: "contact@epicerie-tassili.example", status: "active", feeBps: 190, settlementCycleDays: 2 },
-  { name: "Voyages Horizon Sud", legalName: "SARL Horizon Sud (fictive)", category: "Voyage", city: "Ghardaïa", email: "contact@horizon-sud.example", status: "under_review", feeBps: 250, settlementCycleDays: 5 },
-  { name: "Studio Lumière Kabylie", legalName: "EURL Lumière (fictive)", category: "Services", city: "Tizi Ouzou", email: "contact@studio-lumiere.example", status: "active", feeBps: 200, settlementCycleDays: 2 },
-  { name: "Club Sportif Aurès Fit", legalName: "Association Aurès Fit (fictive)", category: "Sport", city: "Batna", email: "contact@aures-fit.example", status: "active", feeBps: 180, settlementCycleDays: 2 },
-  { name: "Parfums d'Al-Andalus", legalName: "SARL Al-Andalus (fictive)", category: "Beauté", city: "Tlemcen", email: "contact@al-andalus.example", status: "suspended", feeBps: 220, settlementCycleDays: 3 },
+  { name: "The Dunes Bookstore", legalName: "SARL Dunes Publishing (fictitious)", category: "Books", city: "Algiers", email: "contact@dunes-books.example", status: "active", feeBps: 190, settlementCycleDays: 2 },
+  { name: "Zephyr Fashion House", legalName: "EURL Zephyr (fictitious)", category: "Fashion", city: "Oran", email: "contact@zephyr-fashion.example", status: "active", feeBps: 210, settlementCycleDays: 2 },
+  { name: "TechNova Algiers", legalName: "SPA TechNova (fictitious)", category: "Electronics", city: "Algiers", email: "contact@technova.example", status: "active", feeBps: 175, settlementCycleDays: 3 },
+  { name: "Tassili Grocery", legalName: "SARL Tassili Gourmet (fictitious)", category: "Food", city: "Constantine", email: "contact@tassili-grocery.example", status: "active", feeBps: 190, settlementCycleDays: 2 },
+  { name: "Horizon South Travel", legalName: "SARL Horizon South (fictitious)", category: "Travel", city: "Ghardaia", email: "contact@horizon-south.example", status: "under_review", feeBps: 250, settlementCycleDays: 5 },
+  { name: "Kabylie Light Studio", legalName: "EURL Light Studio (fictitious)", category: "Services", city: "Tizi Ouzou", email: "contact@kabylie-light-studio.example", status: "active", feeBps: 200, settlementCycleDays: 2 },
+  { name: "Aures Fit Sports Club", legalName: "Aures Fit Association (fictitious)", category: "Sports", city: "Batna", email: "contact@aures-fit.example", status: "active", feeBps: 180, settlementCycleDays: 2 },
+  { name: "Al-Andalus Perfumes", legalName: "SARL Al-Andalus (fictitious)", category: "Beauty", city: "Tlemcen", email: "contact@al-andalus-perfumes.example", status: "suspended", feeBps: 220, settlementCycleDays: 3 },
 ];
 
 const MERCHANT_WEIGHTS = [20, 16, 18, 12, 5, 8, 8, 3];
 
 const DESCRIPTIONS: Record<string, string[]> = {
-  Librairie: ["Manuels scolaires — lot de rentrée", "Roman et bande dessinée", "Abonnement revue mensuelle"],
-  Mode: ["Robe en lin — commande en ligne", "Chaussures de ville", "Écharpe et accessoires"],
-  Électronique: ["Casque audio sans fil", "Chargeur rapide et câble", "Tablette 10 pouces"],
-  Alimentation: ["Panier dattes et huile d'olive", "Café et thé — coffret", "Épices du Tassili"],
-  Voyage: ["Acompte séjour Sahara — 4 nuits", "Circuit Ghardaïa — 2 personnes", "Réservation week-end"],
-  Services: ["Séance photo famille", "Impression et encadrement", "Reportage événement"],
-  Sport: ["Abonnement trimestriel", "Séance coaching individuel", "Équipement de fitness"],
-  Beauté: ["Coffret parfum oriental", "Huile d'argan — 100 ml", "Soin visage"],
+  Books: ["School textbooks — back-to-school set", "Novel and comic book", "Monthly magazine subscription"],
+  Fashion: ["Linen dress — online order", "City shoes", "Scarf and accessories"],
+  Electronics: ["Wireless headphones", "Fast charger and cable", "10-inch tablet"],
+  Food: ["Dates and olive oil basket", "Coffee and tea gift box", "Tassili spices"],
+  Travel: ["Sahara stay deposit — 4 nights", "Ghardaia tour — 2 people", "Weekend booking"],
+  Services: ["Family photo session", "Printing and framing", "Event coverage"],
+  Sports: ["Quarterly membership", "Individual coaching session", "Fitness equipment"],
+  Beauty: ["Oriental perfume gift set", "Argan oil — 100 ml", "Face care"],
 };
 
 const FIRST_NAMES = ["Amine", "Yasmine", "Karim", "Lina", "Sofiane", "Meriem", "Nassim", "Imane", "Walid", "Sara", "Rachid", "Nadia", "Mehdi", "Amel", "Farid", "Samira", "Bilal", "Houda", "Anis", "Lydia", "Oussama", "Ines", "Tarek", "Maya", "Hichem", "Selma", "Djamel", "Rania", "Younes", "Katia", "Adel", "Nour", "Salim", "Wissem", "Ilyes", "Celia"];
 const LAST_NAMES = ["Benali", "Haddad", "Mansouri", "Cherif", "Boukhalfa", "Zerrouki", "Saidi", "Amrani", "Belkacem", "Merabet", "Khelifi", "Ouali", "Slimani", "Hamidi", "Larbi", "Djebbar", "Rahmani", "Tebboune", "Aouadi", "Bensalem", "Guerfi", "Lounis", "Medjahed", "Yahiaoui", "Zidane", "Kaci", "Brahimi", "Fellah", "Ghezali", "Hamdani", "Idir", "Messaoudi", "Nacer", "Ouyahia", "Redouane", "Toumi"];
-const CITIES = ["Alger", "Oran", "Constantine", "Annaba", "Blida", "Sétif", "Batna", "Tlemcen", "Béjaïa", "Tizi Ouzou", "Ghardaïa"];
+const CITIES = ["Algiers", "Oran", "Constantine", "Annaba", "Blida", "Setif", "Batna", "Tlemcen", "Bejaia", "Tizi Ouzou", "Ghardaia"];
 
-const NO_ACTIVITY_CUSTOMERS = 5; // derniers clients : jamais de transaction (segment « sans paiement »)
+const NO_ACTIVITY_CUSTOMERS = 5; // last customers: no transactions at all ("no successful payment" segment)
 const CUSTOMER_COUNT = 36;
 const TRANSACTION_COUNT = 280;
-/** Transactions volontairement laissées « en attente » depuis plus de 24 h (démonstration d'alerte). */
+/** Transactions deliberately left "pending" for more than 24 h (alert demonstration). */
 const STALE_OPEN_INDEXES = new Set([14, 61, 133]);
 
-const SYSTEM_ACTOR = "Système (démo)";
-const OPERATOR_ACTOR = "Lina Démo";
-const ADMIN_ACTOR = "Amine Démo";
+const SYSTEM_ACTOR = "System (demo)";
+const OPERATOR_ACTOR = "Lina Demo";
+const ADMIN_ACTOR = "Amine Demo";
 
 export interface SeedData {
   customers: Customer[];
@@ -127,14 +127,14 @@ export function generateSeed(now: number): SeedData {
     }
   };
 
-  // --- Commerçants
+  // --- Merchants
   const merchants: Merchant[] = MERCHANT_DEFS.map((m, i) => ({
     ...m,
     id: `mrc_${pad(i + 1, 3)}`,
     createdAt: iso(now - (400 - i * 25) * DAY_MS),
   }));
 
-  // --- Clients
+  // --- Customers
   const customers: Customer[] = Array.from({ length: CUSTOMER_COUNT }, (_, i) => {
     const first = FIRST_NAMES[i % FIRST_NAMES.length];
     const last = LAST_NAMES[(i * 7 + 3) % LAST_NAMES.length];
@@ -158,14 +158,14 @@ export function generateSeed(now: number): SeedData {
 
   for (let i = 0; i < TRANSACTION_COUNT; i++) {
     const stale = STALE_OPEN_INDEXES.has(i);
-    // Densité décroissante avec l'âge : l'activité « croît » vers aujourd'hui.
+    // Density decreasing with age: activity "grows" towards today.
     const ageDays = stale ? rng.int(2, 6) : Math.min(89, Math.floor(90 * (1 - Math.sqrt(rng.float()))));
     let createdMs = todayStart - ageDays * DAY_MS + rng.int(8 * 60, 22 * 60) * 60_000;
     if (createdMs > now - 10 * 60_000) createdMs = now - rng.int(10, 600) * 60_000;
 
     const merchant = merchants[weightedIndex(rng, MERCHANT_WEIGHTS)];
     const customer = rng.pick(activeCustomers);
-    // Montants : log-uniformes entre 500 DA et 60 000 DA, arrondis à 10 DA
+    // Amounts: log-uniform between 500 DA and 60,000 DA, rounded to 10 DA
     const amountDa = Math.round(Math.exp(Math.log(500) + rng.float() * (Math.log(60_000) - Math.log(500))) / 10) * 10;
     const amount = amountDa * 100;
 
@@ -194,7 +194,7 @@ export function generateSeed(now: number): SeedData {
       checkoutToken: generateCheckoutToken(rng.bytes),
       merchantId: merchant.id,
       customerId: customer.id,
-      orderRef: `CMD-${1000 + i}`,
+      orderRef: `ORD-${1000 + i}`,
       description,
       amount,
       currency: "DZD",
@@ -204,14 +204,14 @@ export function generateSeed(now: number): SeedData {
       fee: 0,
       createdAt: iso(createdMs),
       updatedAt: iso(createdMs),
-      history: [{ at: iso(createdMs), from: null, to: "created", note: "Demande de paiement créée", actor: SYSTEM_ACTOR }],
+      history: [{ at: iso(createdMs), from: null, to: "created", note: "Payment request created", actor: SYSTEM_ACTOR }],
       origin: "demo",
     };
 
     const step = (to: PaymentStatus, atMs: number, failureReason?: FailureReason) => {
       tx = applyTransition(tx, to, {
         now: iso(Math.min(atMs, now)),
-        actor: "Client (page de paiement)",
+        actor: "Customer (payment page)",
         feeBps: merchant.feeBps,
         method,
         failureReason,
@@ -220,7 +220,7 @@ export function generateSeed(now: number): SeedData {
 
     if (final === "pending") step("pending", createdMs + rng.int(30, 240) * 1000);
     else if (final === "cancelled") {
-      tx = applyTransition(tx, "cancelled", { now: iso(Math.min(createdMs + rng.int(600, 7200) * 1000, now)), actor: OPERATOR_ACTOR, note: "Annulée par l'opérateur" });
+      tx = applyTransition(tx, "cancelled", { now: iso(Math.min(createdMs + rng.int(600, 7200) * 1000, now)), actor: OPERATOR_ACTOR, note: "Cancelled by the operator" });
     } else if (final === "failed" || final === "succeeded") {
       let t = createdMs + rng.int(20, 200) * 1000;
       if (rng.float() < 0.4) {
@@ -231,7 +231,7 @@ export function generateSeed(now: number): SeedData {
       else step("succeeded", t);
     }
 
-    // Remboursements (uniquement sur paiements encaissés)
+    // Refunds (only on collected payments)
     if (tx.status === "succeeded" && ageMs > DAY_MS) {
       const roll = rng.float();
       const plan: number[] = roll < 0.05 ? [100] : roll < 0.14 ? [rng.pick([20, 30, 50, 60])] : roll < 0.17 ? [30, 40] : [];
@@ -259,14 +259,14 @@ export function generateSeed(now: number): SeedData {
           action: "refund.created",
           entityType: "refund",
           entityId: planned.refund.id,
-          summary: `Remboursement ${refundRef} sur ${tx.reference}`,
+          summary: `Refund ${refundRef} on ${tx.reference}`,
         });
       }
     }
     transactions.push(tx);
   }
 
-  // --- Règlements historiques (lots bimensuels pour les commerçants actifs)
+  // --- Historical settlements (bi-weekly batches for active merchants)
   const settlements: Settlement[] = [];
   let txs = transactions;
   let refs = refunds;
@@ -284,7 +284,7 @@ export function generateSeed(now: number): SeedData {
           now: iso(cutoffMs),
         });
       } catch {
-        continue; // rien à régler pour ce commerçant à cette date
+        continue; // nothing to settle for this merchant at this date
       }
       let { settlement } = built;
       let newTxs = built.transactions;
@@ -296,7 +296,7 @@ export function generateSeed(now: number): SeedData {
         const resolved = resolveSettlement(settlement, outcome, newTxs, newRefs, iso(cutoffMs + 26 * 3_600_000));
         settlement = resolved.settlement;
         if (outcome === "failed") {
-          newTxs = []; // lignes libérées : elles restent hors lot
+          newTxs = []; // lines released: they stay outside any batch
           newRefs = [];
         }
       }
@@ -313,7 +313,7 @@ export function generateSeed(now: number): SeedData {
         action: "settlement.created",
         entityType: "settlement",
         entityId: settlement.id,
-        summary: `Lot ${settlement.reference} généré pour ${merchant.name}`,
+        summary: `Batch ${settlement.reference} generated for ${merchant.name}`,
       });
     }
   }
@@ -325,7 +325,7 @@ export function generateSeed(now: number): SeedData {
     role: "admin",
     action: "demo.seeded",
     entityType: "demo",
-    summary: "Données de démonstration (sandbox) chargées",
+    summary: "Demo data (sandbox) loaded",
   });
   auditLogs.sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
 
@@ -340,11 +340,11 @@ export function defaultSettings(now: number): AppSettings {
   return {
     id: "singleton",
     organization: {
-      name: "PSP Sandbox Algérie",
-      legalName: "SARL Paiements Démo (société fictive)",
+      name: "PSP Sandbox Algeria",
+      legalName: "SARL Demo Payments (fictitious company)",
       email: "contact@psp-sandbox.example",
       phone: "0550000000",
-      city: "Alger",
+      city: "Algiers",
       taxId: "NIF-DEMO-000000000000",
     },
     preferences: { density: "comfortable", pageSize: 25, defaultPeriod: "30d" },
@@ -354,5 +354,5 @@ export function defaultSettings(now: number): AppSettings {
   };
 }
 
-/** Utilitaire exposé pour les tests : recalcule la commission attendue d'une transaction. */
+/** Utility exposed for tests: recomputes the expected fee of a transaction. */
 export const expectedFee = (amount: number, feeBps: number) => applyBps(amount, feeBps);

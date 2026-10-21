@@ -20,25 +20,25 @@ import { usePspStore } from "@/store/usePspStore";
 import { formatPhone } from "@/utils/format";
 
 const TABS = [
-  { id: "organisation", label: "Organisation" },
-  { id: "preferences", label: "Préférences" },
-  { id: "roles", label: "Rôles et droits" },
-  { id: "audit", label: "Journal d'audit" },
-  { id: "demo", label: "Données de démo" },
+  { id: "organization", label: "Organization" },
+  { id: "preferences", label: "Preferences" },
+  { id: "roles", label: "Roles and permissions" },
+  { id: "audit", label: "Audit log" },
+  { id: "demo", label: "Demo data" },
 ];
 
 const AUDIT_LABEL: Record<AuditAction, string> = {
-  "payment.created": "Paiement créé",
-  "payment.status_changed": "Statut modifié",
-  "refund.created": "Remboursement",
-  "settlement.created": "Lot généré",
-  "settlement.settled": "Lot réglé",
-  "settlement.failed": "Lot échoué",
-  "settings.updated": "Paramètres modifiés",
-  "role.switched": "Changement de rôle",
-  "export.csv": "Export CSV",
-  "demo.reset": "Démo réinitialisée",
-  "demo.seeded": "Démo initialisée",
+  "payment.created": "Payment created",
+  "payment.status_changed": "Status changed",
+  "refund.created": "Refund",
+  "settlement.created": "Batch generated",
+  "settlement.settled": "Batch settled",
+  "settlement.failed": "Batch failed",
+  "settings.updated": "Settings changed",
+  "role.switched": "Role changed",
+  "export.csv": "CSV export",
+  "demo.reset": "Demo reset",
+  "demo.seeded": "Demo initialized",
 };
 
 function OrganizationTab() {
@@ -48,7 +48,7 @@ function OrganizationTab() {
   const editable = can(role, "settings.edit");
   const [values, setValues] = useState<OrganizationProfile>(data.settings.organization);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const action = useAction((profile: OrganizationProfile) => update(profile), { success: "Profil de l'organisation enregistré.", inlineError: true });
+  const action = useAction((profile: OrganizationProfile) => update(profile), { success: "Organization profile saved.", inlineError: true });
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -65,17 +65,17 @@ function OrganizationTab() {
   return (
     <div className="space-y-5">
       {!editable && (
-        <Notice tone="warning" title="Lecture seule">
-          Le rôle « {ROLE_LABEL[role]} » ne peut pas modifier le profil de l'organisation. Passez au rôle « Administrateur » via le menu profil.
+        <Notice tone="warning" title="Read-only">
+          The "{ROLE_LABEL[role]}" role cannot edit the organization profile. Switch to the "Administrator" role through the profile menu.
         </Notice>
       )}
-      <form onSubmit={onSubmit} noValidate className="grid grid-cols-1 gap-4 sm:grid-cols-2" aria-label="Profil de l'organisation">
-        <TextField label="Nom commercial" required value={values.name} onChange={set("name")} error={errors.name} disabled={!editable} />
-        <TextField label="Raison sociale (fictive)" required value={values.legalName} onChange={set("legalName")} error={errors.legalName} disabled={!editable} />
-        <TextField label="E-mail de contact" type="email" required value={values.email} onChange={set("email")} error={errors.email} disabled={!editable} />
-        <TextField label="Téléphone" inputMode="tel" value={values.phone} onChange={set("phone")} error={errors.phone} disabled={!editable} hint={`Affiché : ${formatPhone(values.phone)}`} />
-        <TextField label="Ville" required value={values.city} onChange={set("city")} error={errors.city} disabled={!editable} />
-        <TextField label="Identifiant fiscal (fictif)" value={values.taxId} onChange={set("taxId")} error={errors.taxId} disabled={!editable} hint="Valeur d'exemple : n'indiquez aucun identifiant réel." />
+      <form onSubmit={onSubmit} noValidate className="grid grid-cols-1 gap-4 sm:grid-cols-2" aria-label="Organization profile">
+        <TextField label="Business name" required value={values.name} onChange={set("name")} error={errors.name} disabled={!editable} />
+        <TextField label="Legal name (fictitious)" required value={values.legalName} onChange={set("legalName")} error={errors.legalName} disabled={!editable} />
+        <TextField label="Contact email" type="email" required value={values.email} onChange={set("email")} error={errors.email} disabled={!editable} />
+        <TextField label="Phone" inputMode="tel" value={values.phone} onChange={set("phone")} error={errors.phone} disabled={!editable} hint={`Displayed: ${formatPhone(values.phone)}`} />
+        <TextField label="City" required value={values.city} onChange={set("city")} error={errors.city} disabled={!editable} />
+        <TextField label="Tax ID (fictitious)" value={values.taxId} onChange={set("taxId")} error={errors.taxId} disabled={!editable} hint="Example value: do not enter any real identifier." />
         {action.error && (
           <p role="alert" className="field-error sm:col-span-2">
             <Icon name="alert" size={14} className="mt-0.5 shrink-0" />
@@ -85,23 +85,23 @@ function OrganizationTab() {
         {editable && (
           <div className="flex justify-end sm:col-span-2">
             <Button type="submit" variant="primary" loading={action.busy}>
-              Enregistrer
+              Save
             </Button>
           </div>
         )}
       </form>
       <dl className="grid grid-cols-1 gap-3 border-t border-ivory-line pt-4 text-[14px] sm:grid-cols-3">
         <div>
-          <dt className="text-[12px] font-semibold uppercase tracking-wide text-ink-muted">Compte</dt>
-          <dd className="m-0">Compte de démonstration (sandbox)</dd>
+          <dt className="text-[12px] font-semibold uppercase tracking-wide text-ink-muted">Account</dt>
+          <dd className="m-0">Demo account (sandbox)</dd>
         </div>
         <div>
-          <dt className="text-[12px] font-semibold uppercase tracking-wide text-ink-muted">Devise</dt>
-          <dd className="m-0">DZD — Dinar algérien (DA), non modifiable</dd>
+          <dt className="text-[12px] font-semibold uppercase tracking-wide text-ink-muted">Currency</dt>
+          <dd className="m-0">DZD — Algerian dinar (DA), not editable</dd>
         </div>
         <div>
-          <dt className="text-[12px] font-semibold uppercase tracking-wide text-ink-muted">Langue</dt>
-          <dd className="m-0">Français (Algérie)</dd>
+          <dt className="text-[12px] font-semibold uppercase tracking-wide text-ink-muted">Language</dt>
+          <dd className="m-0">English</dd>
         </div>
       </dl>
     </div>
@@ -112,16 +112,16 @@ function PreferencesTab() {
   const prefs = useData().settings.preferences;
   const update = usePspStore((s) => s.updatePreferences);
   const setPeriod = usePspStore((s) => s.setPeriod);
-  const action = useAction((next: typeof prefs) => update(next), { success: "Préférences enregistrées." });
+  const action = useAction((next: typeof prefs) => update(next), { success: "Preferences saved." });
 
   return (
     <div className="max-w-xl space-y-5">
       <fieldset className="m-0 border-0 p-0">
-        <legend className="field-label">Densité d'affichage des tableaux</legend>
+        <legend className="field-label">Table display density</legend>
         <div role="radiogroup" className="inline-flex rounded-xl border border-ivory-line bg-ivory-soft p-1">
           {([
-            ["comfortable", "Confortable"],
-            ["compact", "Compacte"],
+            ["comfortable", "Comfortable"],
+            ["compact", "Compact"],
           ] as [Density, string][]).map(([value, label]) => (
             <button
               key={value}
@@ -138,20 +138,20 @@ function PreferencesTab() {
         </div>
       </fieldset>
       <SelectField
-        label="Lignes par page (listes)"
+        label="Rows per page (lists)"
         value={String(prefs.pageSize)}
         onChange={(e) => void action.run({ ...prefs, pageSize: Number(e.target.value) as 10 | 25 | 50 })}
       >
         {[10, 25, 50].map((n) => (
           <option key={n} value={n}>
-            {n} lignes
+            {n} rows
           </option>
         ))}
       </SelectField>
       <SelectField
-        label="Période par défaut"
+        label="Default period"
         value={prefs.defaultPeriod}
-        hint="Appliquée à l'ouverture de l'application et après une réinitialisation."
+        hint="Applied when the application opens and after a reset."
         onChange={(e) => {
           const defaultPeriod = e.target.value as PeriodKey;
           setPeriod(defaultPeriod);
@@ -166,12 +166,12 @@ function PreferencesTab() {
       </SelectField>
       <dl className="grid grid-cols-1 gap-3 border-t border-ivory-line pt-4 text-[14px] sm:grid-cols-2">
         <div>
-          <dt className="text-[12px] font-semibold uppercase tracking-wide text-ink-muted">Format des montants</dt>
+          <dt className="text-[12px] font-semibold uppercase tracking-wide text-ink-muted">Amount format</dt>
           <dd className="num m-0">{formatDA(1_250_050)}</dd>
         </div>
         <div>
-          <dt className="text-[12px] font-semibold uppercase tracking-wide text-ink-muted">Fuseau horaire des dates</dt>
-          <dd className="m-0">Algérie (UTC+1, sans heure d'été)</dd>
+          <dt className="text-[12px] font-semibold uppercase tracking-wide text-ink-muted">Date time zone</dt>
+          <dd className="m-0">Algeria (UTC+1, no daylight saving time)</dd>
         </div>
       </dl>
     </div>
@@ -184,39 +184,39 @@ function RolesTab() {
   const pushToast = usePspStore((s) => s.pushToast);
   const action = useAction(async (r: Role) => {
     await switchRole(r);
-    pushToast("info", `Rôle de démonstration : ${ROLE_LABEL[r]}.`);
+    pushToast("info", `Demo role: ${ROLE_LABEL[r]}.`);
   });
   const permissions = Object.keys(PERMISSION_LABEL) as Permission[];
   const roles: Role[] = ["admin", "operator"];
 
   return (
     <div className="space-y-5">
-      <Notice tone="sandbox" title="Gestion visuelle des rôles — sans authentification">
-        Le changement de rôle est une simulation locale : il n'existe ni compte, ni mot de passe, ni contrôle serveur. En production, les droits sont portés par une
-        identité authentifiée et vérifiés par le backend à chaque requête.
+      <Notice tone="sandbox" title="Visual role management — no authentication">
+        Switching role is a local simulation: there is no account, no password and no server check. In production, permissions are carried by an
+        authenticated identity and verified by the backend on every request.
       </Notice>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {roles.map((r) => (
           <div key={r} className={`rounded-xl border-2 p-4 ${current === r ? "border-teal bg-teal-light" : "border-ivory-line"}`}>
             <div className="flex items-center justify-between gap-2">
               <p className="m-0 text-[15px] font-semibold">{ROLE_LABEL[r]}</p>
-              {current === r && <ToneBadge tone="teal">Rôle actif</ToneBadge>}
+              {current === r && <ToneBadge tone="teal">Active role</ToneBadge>}
             </div>
             <p className="m-0 text-[13px] text-ink-muted">
               {DEMO_USERS[r].name} · {DEMO_USERS[r].email}
             </p>
             <Button className="mt-3" size="sm" disabled={current === r || action.busy} onClick={() => void action.run(r)}>
-              {current === r ? "Rôle actuel" : `Utiliser le rôle ${ROLE_LABEL[r].toLowerCase()}`}
+              {current === r ? "Current role" : `Use the ${ROLE_LABEL[r].toLowerCase()} role`}
             </Button>
           </div>
         ))}
       </div>
       <div className="overflow-x-auto rounded-xl border border-ivory-line">
         <table className="data-table compact">
-          <caption className="sr-only">Matrice des droits par rôle</caption>
+          <caption className="sr-only">Permission matrix by role</caption>
           <thead>
             <tr>
-              <th scope="col">Droit</th>
+              <th scope="col">Permission</th>
               {roles.map((r) => (
                 <th key={r} scope="col" className="text-center">
                   {ROLE_LABEL[r]}
@@ -237,10 +237,10 @@ function RolesTab() {
                       {ok ? (
                         <span className="inline-flex items-center gap-1 text-success">
                           <Icon name="check" size={16} />
-                          <span className="sr-only">Autorisé</span>
+                          <span className="sr-only">Allowed</span>
                         </span>
                       ) : (
-                        <span className="text-ink-muted" aria-label="Non autorisé">
+                        <span className="text-ink-muted" aria-label="Not allowed">
                           —
                         </span>
                       )}
@@ -252,7 +252,7 @@ function RolesTab() {
           </tbody>
         </table>
       </div>
-      <p className="m-0 text-[13px] text-ink-muted">Plafond de remboursement unitaire pour l'opérateur : {formatDA(MAX_REFUND_OPERATOR)}.</p>
+      <p className="m-0 text-[13px] text-ink-muted">Per-refund ceiling for the operator: {formatDA(MAX_REFUND_OPERATOR)}.</p>
     </div>
   );
 }
@@ -274,17 +274,17 @@ function AuditTab() {
   return (
     <div className="space-y-4">
       <p className="m-0 text-[13.5px] text-ink-muted">
-        Journal local des actions sensibles de la démonstration. Il peut être effacé à tout moment (réinitialisation) : ce n'est pas une piste d'audit probante.
+        Local log of the demonstration's sensitive actions. It can be erased at any time (reset): it is not a probative audit trail.
       </p>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
           <label htmlFor="audit-search" className="field-label">
-            Recherche
+            Search
           </label>
-          <input id="audit-search" type="search" className="field-input" value={q} placeholder="Acteur, référence, action…" onChange={(e) => { setQ(e.target.value); setPageNum(1); }} autoComplete="off" />
+          <input id="audit-search" type="search" className="field-input" value={q} placeholder="Actor, reference, action…" onChange={(e) => { setQ(e.target.value); setPageNum(1); }} autoComplete="off" />
         </div>
-        <SelectField label="Type d'action" value={kind} onChange={(e) => { setKind(e.target.value); setPageNum(1); }}>
-          <option value="">Toutes les actions</option>
+        <SelectField label="Action type" value={kind} onChange={(e) => { setKind(e.target.value); setPageNum(1); }}>
+          <option value="">All actions</option>
           {(Object.keys(AUDIT_LABEL) as AuditAction[]).map((k) => (
             <option key={k} value={k}>
               {AUDIT_LABEL[k]}
@@ -293,20 +293,20 @@ function AuditTab() {
         </SelectField>
       </div>
       {rows.length === 0 ? (
-        <EmptyState icon="shield" title="Aucune entrée">
-          Aucune action ne correspond à ces critères.
+        <EmptyState icon="shield" title="No entries">
+          No action matches these criteria.
         </EmptyState>
       ) : (
         <div className="overflow-hidden rounded-xl border border-ivory-line">
           <div className="overflow-x-auto">
             <table className="data-table compact">
-              <caption className="sr-only">Journal d'audit</caption>
+              <caption className="sr-only">Audit log</caption>
               <thead>
                 <tr>
                   <th scope="col">Date</th>
-                  <th scope="col">Acteur</th>
+                  <th scope="col">Actor</th>
                   <th scope="col">Action</th>
-                  <th scope="col">Détail</th>
+                  <th scope="col">Details</th>
                 </tr>
               </thead>
               <tbody>
@@ -326,7 +326,7 @@ function AuditTab() {
               </tbody>
             </table>
           </div>
-          <Pagination page={page} onPage={setPageNum} label="entrées" />
+          <Pagination page={page} onPage={setPageNum} label="entries" />
         </div>
       )}
     </div>
@@ -338,7 +338,7 @@ function DemoTab() {
   const role = useRole();
   const reset = usePspStore((s) => s.resetDemo);
   const [confirm, setConfirm] = useState(false);
-  const action = useAction(() => reset(), { success: "Démo réinitialisée : données d'origine restaurées.", inlineError: true });
+  const action = useAction(() => reset(), { success: "Demo reset: original data restored.", inlineError: true });
   const canReset = can(role, "demo.reset");
 
   async function onConfirm() {
@@ -348,16 +348,16 @@ function DemoTab() {
 
   return (
     <div className="space-y-5">
-      <Notice tone="sandbox" title="Stockage local uniquement">
-        Les données sont conservées dans IndexedDB, dans ce navigateur : elles persistent après actualisation mais ne sont ni partagées, ni sauvegardées, ni
-        sécurisées côté serveur. Vider les données du site les efface.
+      <Notice tone="sandbox" title="Local storage only">
+        Data is kept in IndexedDB, in this browser: it persists after a refresh but is neither shared, nor backed up, nor
+        secured server-side. Clearing the site data erases it.
       </Notice>
       <dl className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         {[
           ["Transactions", data.transactions.length],
-          ["Clients", data.customers.length],
-          ["Commerçants", data.merchants.length],
-          ["Lots de règlement", data.settlements.length],
+          ["Customers", data.customers.length],
+          ["Merchants", data.merchants.length],
+          ["Settlement batches", data.settlements.length],
         ].map(([label, n]) => (
           <div key={label} className="rounded-xl border border-ivory-line p-3">
             <dt className="text-[12px] font-semibold uppercase tracking-wide text-ink-muted">{label}</dt>
@@ -366,40 +366,40 @@ function DemoTab() {
         ))}
       </dl>
       <p className="m-0 text-[13.5px] text-ink-muted">
-        Jeu de données chargé le <span className="num">{formatDateTime(data.settings.seededAt)}</span> (version {data.settings.seedVersion}). Il est reproductible :
-        la réinitialisation recrée exactement les mêmes entités, datées relativement à aujourd'hui.
+        Dataset loaded on <span className="num">{formatDateTime(data.settings.seededAt)}</span> (version {data.settings.seedVersion}). It is reproducible:
+        a reset recreates exactly the same entities, dated relative to today.
       </p>
       <div>
         <Button variant="accent" icon="refresh" disabled={!canReset} onClick={() => setConfirm(true)}>
-          Réinitialiser la démonstration
+          Reset the demo
         </Button>
-        {!canReset && <p className="field-hint">Réservé au rôle « Administrateur ».</p>}
+        {!canReset && <p className="field-hint">Reserved for the "Administrator" role.</p>}
       </div>
       <ConfirmDialog
         open={confirm}
-        title="Réinitialiser toutes les données ?"
-        confirmLabel="Oui, réinitialiser"
+        title="Reset all the data?"
+        confirmLabel="Yes, reset"
         tone="danger"
         busy={action.busy}
         error={action.error}
         onCancel={() => setConfirm(false)}
         onConfirm={() => void onConfirm()}
-        message="Toutes les transactions, remboursements, lots, clients créés et entrées d'audit seront remplacés par le jeu de démonstration d'origine. Cette action est irréversible (données fictives uniquement)."
+        message="All transactions, refunds, batches, created customers and audit entries will be replaced by the original demonstration dataset. This action is irreversible (fictitious data only)."
       />
     </div>
   );
 }
 
 export function Settings() {
-  useDocumentTitle("Paramètres");
+  useDocumentTitle("Settings");
   const [params, setParams] = useSearchParams();
-  const tab = TABS.some((t) => t.id === params.get("tab")) ? (params.get("tab") as string) : "organisation";
+  const tab = TABS.some((t) => t.id === params.get("tab")) ? (params.get("tab") as string) : "organization";
 
   return (
     <div className="space-y-4">
-      <Tabs tabs={TABS} active={tab} onChange={(id) => setParams(id === "organisation" ? new URLSearchParams() : new URLSearchParams({ tab: id }), { replace: true })} label="Sections des paramètres" />
+      <Tabs tabs={TABS} active={tab} onChange={(id) => setParams(id === "organization" ? new URLSearchParams() : new URLSearchParams({ tab: id }), { replace: true })} label="Settings sections" />
       <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`} className="card p-5">
-        {tab === "organisation" && <OrganizationTab />}
+        {tab === "organization" && <OrganizationTab />}
         {tab === "preferences" && <PreferencesTab />}
         {tab === "roles" && <RolesTab />}
         {tab === "audit" && <AuditTab />}

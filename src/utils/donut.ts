@@ -1,7 +1,7 @@
 /**
- * Calcul des segments d'un graphique en anneau (SVG stroke-dasharray).
- * Repris de l'application source (où il servait à la répartition des dépenses par catégorie) et
- * généralisé : il sert ici à la répartition du volume encaissé par méthode de paiement.
+ * Computation of the segments of a donut chart (SVG stroke-dasharray).
+ * Carried over from the source application (where it split expenses by category) and
+ * generalized: here it splits the collected volume by payment method.
  */
 const RADIUS = 68;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
@@ -21,9 +21,9 @@ export interface BreakdownEntry {
 export interface DonutSegment {
   item: DonutItem;
   percent: number;
-  dashArray: string; // "length gap" pour <circle stroke-dasharray>
-  dashOffset: number; // décalage cumulatif
-  labelAngleDeg: number; // angle du milieu du segment
+  dashArray: string; // "length gap" for <circle stroke-dasharray>
+  dashOffset: number; // cumulative offset
+  labelAngleDeg: number; // angle of the segment's midpoint
 }
 
 export function computeDonutSegments(breakdown: BreakdownEntry[]): DonutSegment[] {
@@ -31,7 +31,7 @@ export function computeDonutSegments(breakdown: BreakdownEntry[]): DonutSegment[
   const sum = active.reduce((a, e) => a + e.total, 0);
   let cumulativePercent = 0;
   return active.map((entry) => {
-    // Longueur calculée sur la fraction exacte (pas sur le pourcentage arrondi) : pas de dérive.
+    // Length computed on the exact fraction (not on the rounded percentage): no drift.
     const exact = sum > 0 ? (entry.total / sum) * 100 : 0;
     const length = (exact / 100) * CIRCUMFERENCE;
     const gap = CIRCUMFERENCE - length;

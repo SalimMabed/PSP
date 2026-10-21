@@ -1,8 +1,8 @@
 /**
- * Modèles de données du PSP sandbox.
+ * Data models of the PSP sandbox.
  *
- * Convention : tous les montants sont des ENTIERS en centimes de dinar (« unités mineures »),
- * jamais des flottants. 1 DA = 100 centimes. Voir `money.ts`.
+ * Convention: every amount is an INTEGER number of centimes (minor units of the dinar),
+ * never a float. 1 DA = 100 centimes. See `money.ts`.
  */
 
 export type PaymentStatus =
@@ -14,7 +14,7 @@ export type PaymentStatus =
   | "partially_refunded"
   | "refunded";
 
-/** Méthodes de paiement FICTIVES — aucune ne contacte un réseau ou un acquéreur. */
+/** FICTITIOUS payment methods: none of them contacts a network or an acquirer. */
 export type PaymentMethod = "cib_sandbox" | "edahabia_sandbox" | "wallet_sandbox" | "transfer_sandbox";
 
 export type FailureReason = "card_declined" | "insufficient_funds" | "expired_card" | "timeout";
@@ -31,7 +31,7 @@ export type MerchantStatus = "active" | "under_review" | "suspended";
 export type SettlementStatus = "pending" | "settled" | "failed";
 
 export type Role = "admin" | "operator";
-/** Acteur d'une action : un rôle de l'équipe, ou le client sur la page de paiement hébergée. */
+/** Actor of an action: a team role, or the customer on the hosted payment page. */
 export type ActorRole = Role | "checkout";
 
 export interface Actor {
@@ -49,9 +49,9 @@ export interface StatusEvent {
 
 export interface Transaction {
   id: string;
-  /** Référence publique unique, ex. « PAY-7K3M9Q2X ». */
+  /** Unique public reference, e.g. "PAY-7K3M9Q2X". */
   reference: string;
-  /** Jeton non devinable utilisé dans l'URL de la page de paiement hébergée. */
+  /** Unguessable token used in the URL of the hosted payment page. */
   checkoutToken: string;
   merchantId: string;
   customerId: string;
@@ -61,15 +61,15 @@ export interface Transaction {
   currency: "DZD";
   method: PaymentMethod | null;
   status: PaymentStatus;
-  /** Cumul des remboursements, centimes. Invariant : 0 ≤ refunded ≤ amount. */
+  /** Cumulative refunds, in centimes. Invariant: 0 ≤ refunded ≤ amount. */
   refunded: number;
-  /** Commission simulée, calculée au moment de la capture, centimes. */
+  /** Simulated fee, computed at capture time, in centimes. */
   fee: number;
   failureReason?: FailureReason;
   createdAt: string;
   updatedAt: string;
   paidAt?: string;
-  /** Lot de règlement qui contient le paiement, si inclus. */
+  /** Settlement batch that contains the payment, if included. */
   settlementId?: string;
   history: StatusEvent[];
   origin: "demo" | "request" | "test";
@@ -81,7 +81,7 @@ export interface Refund {
   transactionId: string;
   merchantId: string;
   amount: number; // centimes, > 0
-  /** Part de commission restituée au commerçant pour ce remboursement, centimes. */
+  /** Share of the fee returned to the merchant for this refund, in centimes. */
   feeReversed: number;
   reason: RefundReason;
   note?: string;
@@ -107,7 +107,7 @@ export interface Merchant {
   city: string;
   email: string;
   status: MerchantStatus;
-  /** Commission en points de base (190 = 1,90 %). */
+  /** Fee in basis points (190 = 1.90%). */
   feeBps: number;
   settlementCycleDays: number;
   createdAt: string;
@@ -120,12 +120,12 @@ export interface Settlement {
   status: SettlementStatus;
   createdAt: string;
   resolvedAt?: string;
-  /** Instantané des éléments inclus (conservé même si le lot échoue et libère ses éléments). */
+  /** Snapshot of the included items (kept even if the batch fails and releases its items). */
   transactionIds: string[];
   refundIds: string[];
-  gross: number; // paiements
-  refunds: number; // remboursements déduits
-  fees: number; // commissions nettes
+  gross: number; // payments
+  refunds: number; // refunds deducted
+  fees: number; // net fees
   net: number; // gross - refunds - fees
 }
 

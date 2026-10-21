@@ -28,13 +28,13 @@ export function TransactionDetail() {
   const role = useRole();
   const [refundOpen, setRefundOpen] = useState(false);
   const tx = data.transactions.find((t) => t.id === id);
-  useDocumentTitle(tx ? tx.reference : "Transaction introuvable");
+  useDocumentTitle(tx ? tx.reference : "Transaction not found");
 
   if (!tx) {
     return (
       <Section>
-        <EmptyState icon="search" title="Transaction introuvable" action={<LinkButton to="/transactions" variant="primary">Retour aux transactions</LinkButton>}>
-          Cette transaction n'existe pas (ou a été supprimée par une réinitialisation de la démo).
+        <EmptyState icon="search" title="Transaction not found" action={<LinkButton to="/transactions" variant="primary">Back to transactions</LinkButton>}>
+          This transaction does not exist (or was deleted by a demo reset).
         </EmptyState>
       </Section>
     );
@@ -55,7 +55,7 @@ export function TransactionDetail() {
 
   return (
     <div className="space-y-6">
-      <nav aria-label="Fil d'Ariane" className="text-[13px] text-ink-muted">
+      <nav aria-label="Breadcrumb" className="text-[13px] text-ink-muted">
         <Link to="/transactions" className="font-semibold text-teal underline-offset-2 hover:underline">
           Transactions
         </Link>{" "}
@@ -72,24 +72,24 @@ export function TransactionDetail() {
             <SandboxBadge />
           </div>
           <p className="m-0 mt-1 text-sm text-ink-muted">
-            {tx.description} · commande <span className="num">{tx.orderRef}</span>
+            {tx.description} · order <span className="num">{tx.orderRef}</span>
           </p>
           <p className="num m-0 mt-3 font-serif text-[34px] font-semibold leading-none">{formatDA(tx.amount)}</p>
           {tx.refunded > 0 && (
             <p className="num m-0 mt-1.5 text-[14px] text-refund">
-              dont {formatDA(tx.refunded)} remboursé ({formatDA(remaining)} encore remboursable)
+              of which {formatDA(tx.refunded)} refunded ({formatDA(remaining)} still refundable)
             </p>
           )}
         </div>
         <div className="flex flex-wrap gap-2">
           {open && (
             <LinkButton to={`/pay/${tx.checkoutToken}`} variant="primary" icon="external">
-              Ouvrir la page de paiement
+              Open the payment page
             </LinkButton>
           )}
           {canRefund && (
             <Button variant="accent" icon="refund" onClick={() => setRefundOpen(true)}>
-              Rembourser
+              Refund
             </Button>
           )}
         </div>
@@ -97,16 +97,16 @@ export function TransactionDetail() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
-          <Section title="Informations">
+          <Section title="Information">
             <DefinitionList
               columns={2}
               items={[
-                { label: "Commerçant", value: merchant ? <Link to={`/commercants/${merchant.id}`} className="font-semibold text-teal underline-offset-2 hover:underline">{merchant.name}</Link> : "—" },
+                { label: "Merchant", value: merchant ? <Link to={`/merchants/${merchant.id}`} className="font-semibold text-teal underline-offset-2 hover:underline">{merchant.name}</Link> : "—" },
                 {
-                  label: "Client",
+                  label: "Customer",
                   value: customer ? (
                     <>
-                      <Link to={`/clients/${customer.id}`} className="font-semibold text-teal underline-offset-2 hover:underline">
+                      <Link to={`/customers/${customer.id}`} className="font-semibold text-teal underline-offset-2 hover:underline">
                         {customer.name}
                       </Link>
                       <div className="text-[13px] text-ink-muted">{customer.email}</div>
@@ -115,60 +115,60 @@ export function TransactionDetail() {
                     "—"
                   ),
                 },
-                { label: "Méthode (sandbox)", value: tx.method ? METHOD_LABEL[tx.method] : "Pas encore choisie" },
-                { label: "Devise", value: "DZD — Dinar algérien (DA)" },
-                { label: "Créée le", value: <span className="num">{formatDateTime(tx.createdAt)}</span> },
-                { label: "Encaissée le", value: tx.paidAt ? <span className="num">{formatDateTime(tx.paidAt)}</span> : "—" },
-                ...(tx.failureReason ? [{ label: "Motif du refus", value: FAILURE_LABEL[tx.failureReason] }] : []),
+                { label: "Method (sandbox)", value: tx.method ? METHOD_LABEL[tx.method] : "Not chosen yet" },
+                { label: "Currency", value: "DZD — Algerian dinar (DA)" },
+                { label: "Created on", value: <span className="num">{formatDateTime(tx.createdAt)}</span> },
+                { label: "Collected on", value: tx.paidAt ? <span className="num">{formatDateTime(tx.paidAt)}</span> : "—" },
+                ...(tx.failureReason ? [{ label: "Decline reason", value: FAILURE_LABEL[tx.failureReason] }] : []),
                 {
-                  label: "Lot de règlement",
+                  label: "Settlement batch",
                   value: settlement ? (
                     <span className="inline-flex flex-wrap items-center gap-2">
-                      <Link to={`/reglements?q=${settlement.reference}`} className="num font-semibold text-teal underline-offset-2 hover:underline">
+                      <Link to={`/settlements?q=${settlement.reference}`} className="num font-semibold text-teal underline-offset-2 hover:underline">
                         {settlement.reference}
                       </Link>
                       <SettlementStatusBadge status={settlement.status} />
                     </span>
                   ) : captured ? (
-                    "Pas encore inclus dans un lot"
+                    "Not yet included in a batch"
                   ) : (
                     "—"
                   ),
                 },
-                { label: "Origine", value: tx.origin === "demo" ? "Données de démonstration" : tx.origin === "test" ? "Transaction de test" : "Demande de paiement" },
+                { label: "Origin", value: tx.origin === "demo" ? "Demo data" : tx.origin === "test" ? "Test transaction" : "Payment request" },
               ]}
             />
             {open && (
               <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-ivory-line pt-4">
-                <span className="text-[13px] font-semibold text-ink-muted">Lien de paiement sandbox :</span>
+                <span className="text-[13px] font-semibold text-ink-muted">Sandbox payment link:</span>
                 <code className="num max-w-full truncate rounded-md bg-ivory-soft px-2 py-1 text-[12.5px]">{checkoutUrl}</code>
-                <CopyButton value={checkoutUrl} label="Copier le lien" />
+                <CopyButton value={checkoutUrl} label="Copy the link" />
               </div>
             )}
           </Section>
 
           {canSimulate && (
-            <Section title="Simuler le résultat" description="Faites évoluer ce paiement dans le cycle autorisé">
+            <Section title="Simulate the outcome" description="Move this payment through the allowed lifecycle">
               <SimulationPanel tx={tx} />
             </Section>
           )}
 
-          <Section title="Remboursements" description={refunds.length ? `${refunds.length} enregistré${refunds.length > 1 ? "s" : ""}` : undefined} bodyClassName="p-0">
+          <Section title="Refunds" description={refunds.length ? `${refunds.length} recorded` : undefined} bodyClassName="p-0">
             {refunds.length === 0 ? (
-              <EmptyState icon="refund" title="Aucun remboursement">
-                {remaining > 0 ? "Ce paiement peut être remboursé, partiellement ou en totalité." : `Un paiement « ${STATUS_LABEL[tx.status]} » ne peut pas être remboursé.`}
+              <EmptyState icon="refund" title="No refunds">
+                {remaining > 0 ? "This payment can be refunded, partially or in full." : `A payment with status "${STATUS_LABEL[tx.status]}" cannot be refunded.`}
               </EmptyState>
             ) : (
               <div className="overflow-x-auto">
                 <table className="data-table compact">
-                  <caption className="sr-only">Historique des remboursements</caption>
+                  <caption className="sr-only">Refund history</caption>
                   <thead>
                     <tr>
-                      <th scope="col">Référence</th>
+                      <th scope="col">Reference</th>
                       <th scope="col">Date</th>
-                      <th scope="col">Motif</th>
-                      <th scope="col">Par</th>
-                      <th scope="col" className="text-right">Montant</th>
+                      <th scope="col">Reason</th>
+                      <th scope="col">By</th>
+                      <th scope="col" className="text-right">Amount</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -192,18 +192,18 @@ export function TransactionDetail() {
         </div>
 
         <div className="space-y-6">
-          <Section title="Montants" description="Calculs sandbox">
+          <Section title="Amounts" description="Sandbox calculations">
             <dl className="m-0 space-y-2.5 text-[14px]">
-              <Row label="Montant du paiement" value={formatDA(tx.amount)} />
-              <Row label="Remboursé" value={tx.refunded > 0 ? `−${formatDA(tx.refunded)}` : formatDA(0)} tone="refund" />
-              <Row label="Restant remboursable" value={formatDA(remaining)} />
-              <Row divider label={`Commission simulée${merchant ? ` (${formatBps(merchant.feeBps)})` : ""}`} value={captured ? formatDA(feeKept) : "—"} />
-              <Row label="Net pour le commerçant" value={captured ? formatDA(net) : "—"} strong />
+              <Row label="Payment amount" value={formatDA(tx.amount)} />
+              <Row label="Refunded" value={tx.refunded > 0 ? `−${formatDA(tx.refunded)}` : formatDA(0)} tone="refund" />
+              <Row label="Remaining refundable" value={formatDA(remaining)} />
+              <Row divider label={`Simulated fee${merchant ? ` (${formatBps(merchant.feeBps)})` : ""}`} value={captured ? formatDA(feeKept) : "—"} />
+              <Row label="Net for the merchant" value={captured ? formatDA(net) : "—"} strong />
             </dl>
-            <p className="m-0 mt-3 text-[12px] text-ink-muted">La commission est restituée au prorata des remboursements.</p>
+            <p className="m-0 mt-3 text-[12px] text-ink-muted">The fee is returned pro rata to the refunds.</p>
           </Section>
 
-          <Section title="Historique des statuts">
+          <Section title="Status history">
             <ol className="m-0 list-none space-y-4 p-0">
               {[...tx.history].reverse().map((h, i) => (
                 <li key={`${h.at}-${i}`} className="relative pl-6">

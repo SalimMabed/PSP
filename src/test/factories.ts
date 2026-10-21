@@ -9,10 +9,10 @@ export function makeMerchant(overrides: Partial<Merchant> = {}): Merchant {
   counter += 1;
   return {
     id: `mrc_t${counter}`,
-    name: `Commerçant test ${counter}`,
-    legalName: "SARL Test (fictive)",
+    name: `Test merchant ${counter}`,
+    legalName: "SARL Test (fictitious)",
     category: "Services",
-    city: "Alger",
+    city: "Algiers",
     email: `m${counter}@test.example`,
     status: "active",
     feeBps: 200,
@@ -26,7 +26,7 @@ export function makeCustomer(overrides: Partial<Customer> = {}): Customer {
   counter += 1;
   return {
     id: `cus_t${counter}`,
-    name: `Client Test ${counter}`,
+    name: `Test Customer ${counter}`,
     email: `c${counter}@client-demo.example`,
     createdAt: "2026-01-01T00:00:00.000Z",
     ...overrides,
@@ -42,9 +42,9 @@ export function makeTx(overrides: Partial<Transaction> = {}): Transaction {
     checkoutToken: `tok${counter}`,
     merchantId: "mrc_1",
     customerId: "cus_1",
-    orderRef: `CMD-${counter}`,
-    description: "Article de test",
-    amount: 100_000, // 1 000 DA
+    orderRef: `ORD-${counter}`,
+    description: "Test item",
+    amount: 100_000, // 1,000 DA
     currency: "DZD",
     method: "cib_sandbox",
     status: "succeeded",

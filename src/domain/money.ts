@@ -1,18 +1,18 @@
 /**
- * Montants : entiers en centimes de dinar (1 DA = 100 centimes). Aucun flottant n'est stocké,
- * toutes les conversions passent par ce module.
+ * Amounts: integers in centimes of the dinar (1 DA = 100 centimes). No float is ever stored;
+ * every conversion goes through this module.
  */
 
 export const CENTIMES_PER_DA = 100;
 
-/** Limites sandbox explicites (ne reflètent aucune réglementation ni plafond bancaire réel). */
+/** Explicit sandbox limits (they do not reflect any regulation or real bank ceiling). */
 export const MIN_PAYMENT = 50 * CENTIMES_PER_DA; // 50 DA
-export const MAX_PAYMENT = 5_000_000 * CENTIMES_PER_DA; // 5 000 000 DA
-/** Plafond de remboursement unitaire pour le rôle « Opérateur » (l'administrateur n'en a pas). */
-export const MAX_REFUND_OPERATOR = 50_000 * CENTIMES_PER_DA; // 50 000 DA
+export const MAX_PAYMENT = 5_000_000 * CENTIMES_PER_DA; // 5,000,000 DA
+/** Per-refund ceiling for the "Operator" role (the administrator has none). */
+export const MAX_REFUND_OPERATOR = 50_000 * CENTIMES_PER_DA; // 50,000 DA
 
-// Séparateur de milliers : espace insécable standard (U+00A0). L'espace fine U+202F de la norme CLDR
-// est absente ou quasi invisible dans plusieurs polices (Literata) ; U+00A0 reste lisible partout.
+// Thousands separator: standard no-break space (U+00A0). The narrow no-break space U+202F from the CLDR
+// standard is missing or nearly invisible in several fonts (Literata); U+00A0 stays readable everywhere.
 const NNBSP = " ";
 const NBSP = " ";
 const MINUS = "−";
@@ -20,29 +20,29 @@ const MINUS = "−";
 export type AmountParse = { ok: true; minor: number } | { ok: false; error: string };
 
 /**
- * Interprète une saisie utilisateur (« 12 500,50 », « 12500.5 », « 1 200 ») en centimes.
- * Virgule ou point = séparateur décimal (2 décimales max). Aucune évaluation flottante.
+ * Interprets user input ("12 500,50", "12500.5", "1 200") as centimes.
+ * Comma or dot = decimal separator (2 decimals max). No floating-point evaluation.
  */
 export function parseAmountInput(raw: string): AmountParse {
   const cleaned = raw.replace(/[\s  ]/g, "");
-  if (cleaned === "") return { ok: false, error: "Saisissez un montant." };
-  if (/^[-−]/.test(cleaned)) return { ok: false, error: "Le montant doit être strictement positif." };
+  if (cleaned === "") return { ok: false, error: "Enter an amount." };
+  if (/^[-−]/.test(cleaned)) return { ok: false, error: "The amount must be strictly positive." };
   if (!/^\d+([.,]\d*)?$/.test(cleaned)) {
-    return { ok: false, error: "Montant invalide : chiffres uniquement (ex. 12 500,50)." };
+    return { ok: false, error: "Invalid amount: digits only (e.g. 12500.50)." };
   }
   const [intPart, fracPartRaw = ""] = cleaned.split(/[.,]/);
-  if (fracPartRaw.length > 2) return { ok: false, error: "Deux décimales au maximum (centimes)." };
-  if (intPart.length > 9) return { ok: false, error: "Montant trop élevé." };
+  if (fracPartRaw.length > 2) return { ok: false, error: "At most two decimal places (centimes)." };
+  if (intPart.length > 9) return { ok: false, error: "Amount too large." };
   const minor = Number(intPart) * CENTIMES_PER_DA + Number(fracPartRaw.padEnd(2, "0"));
-  if (minor <= 0) return { ok: false, error: "Le montant doit être strictement positif." };
+  if (minor <= 0) return { ok: false, error: "The amount must be strictly positive." };
   return { ok: true, minor };
 }
 
-/** Message d'erreur si le montant sort des limites sandbox d'un paiement, sinon null. */
+/** Error message if the amount is outside the sandbox payment limits, otherwise null. */
 export function paymentAmountError(minor: number): string | null {
-  if (!Number.isSafeInteger(minor) || minor <= 0) return "Le montant doit être strictement positif.";
-  if (minor < MIN_PAYMENT) return `Montant minimum : ${formatDA(MIN_PAYMENT)}.`;
-  if (minor > MAX_PAYMENT) return `Montant maximum (sandbox) : ${formatDA(MAX_PAYMENT)}.`;
+  if (!Number.isSafeInteger(minor) || minor <= 0) return "The amount must be strictly positive.";
+  if (minor < MIN_PAYMENT) return `Minimum amount: ${formatDA(MIN_PAYMENT)}.`;
+  if (minor > MAX_PAYMENT) return `Maximum amount (sandbox): ${formatDA(MAX_PAYMENT)}.`;
   return null;
 }
 
@@ -51,15 +51,15 @@ function groupThousands(intStr: string): string {
 }
 
 export interface FormatOptions {
-  /** Ajoute « DA » (défaut : true). */
+  /** Appends "DA" (default: true). */
   currency?: boolean;
-  /** « auto » n'affiche les centimes que s'ils sont non nuls. */
+  /** "auto" only shows centimes when they are non-zero. */
   decimals?: "auto" | "always" | "never";
-  /** Préfixe « + » pour les valeurs positives (utile pour des variations). */
+  /** Prefixes "+" on positive values (useful for variations). */
   signed?: boolean;
 }
 
-/** Formate des centimes en « 12 500,50 DA » (séparateurs français, signe typographique). */
+/** Formats centimes as "12 500,50 DA" (French-style separators, typographic minus sign). */
 export function formatDA(minor: number, options: FormatOptions = {}): string {
   const { currency = true, decimals = "auto", signed = false } = options;
   const negative = minor < 0;
@@ -73,7 +73,7 @@ export function formatDA(minor: number, options: FormatOptions = {}): string {
   return `${sign}${out}${currency ? `${NBSP}DA` : ""}`;
 }
 
-/** Valeur décimale pour export CSV (virgule décimale, sans séparateur de milliers), ex. « 12500,50 ». */
+/** Decimal value for CSV export (decimal comma, no thousands separator), e.g. "12500,50". */
 export function formatDecimalComma(minor: number): string {
   const negative = minor < 0;
   const abs = Math.abs(minor);
@@ -82,19 +82,19 @@ export function formatDecimalComma(minor: number): string {
   return `${negative ? "-" : ""}${whole},${cents}`;
 }
 
-/** Valeur saisissable (pour pré-remplir un champ) : « 12500,5 » → « 12500,50 ». */
+/** Editable value used to prefill an input, e.g. 1250050 → "12500,50". */
 export function minorToInput(minor: number): string {
   const whole = Math.floor(minor / CENTIMES_PER_DA);
   const cents = minor % CENTIMES_PER_DA;
   return cents === 0 ? String(whole) : `${whole},${String(cents).padStart(2, "0")}`;
 }
 
-/** Commission : points de base (190 = 1,90 %) appliqués à un montant en centimes, arrondi au centime. */
+/** Fee: basis points (190 = 1.90%) applied to an amount in centimes, rounded to the nearest centime. */
 export function applyBps(amount: number, bps: number): number {
   return Math.round((amount * bps) / 10_000);
 }
 
-/** Répartition proportionnelle arrondie : total × part / whole. */
+/** Rounded proportional split: total × part / whole. */
 export function prorate(total: number, part: number, whole: number): number {
   if (whole <= 0) return 0;
   return Math.round((total * part) / whole);
@@ -105,7 +105,7 @@ export function formatBps(bps: number): string {
   return `${pct.toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}${NBSP}%`;
 }
 
-/** Pourcentage entier (0–100) de part/total, 0 si total nul. */
+/** Whole percentage (0–100) of part/total, 0 when total is zero. */
 export function percentOf(part: number, total: number): number {
   return total > 0 ? Math.round((part / total) * 100) : 0;
 }

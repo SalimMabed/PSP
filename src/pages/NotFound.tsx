@@ -4,22 +4,22 @@ import { EmptyState } from "@/components/ui/States";
 import { useDocumentTitle } from "@/hooks/useData";
 
 export function NotFound() {
-  useDocumentTitle("Page introuvable");
+  useDocumentTitle("Page not found");
   return (
     <Section>
       <EmptyState
         icon="search"
-        title="Cette page n'existe pas"
+        title="This page does not exist"
         action={
           <>
             <LinkButton to="/" variant="primary" icon="home">
-              Tableau de bord
+              Dashboard
             </LinkButton>
             <LinkButton to="/transactions">Transactions</LinkButton>
           </>
         }
       >
-        L'adresse saisie ne correspond à aucune page de la sandbox.
+        The address you entered does not match any page of the sandbox.
       </EmptyState>
     </Section>
   );

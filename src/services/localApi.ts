@@ -31,9 +31,9 @@ import type { PspApi, RequestContext, SettlementRunResult, SimulatedOutcome } fr
 type AuditInput = Omit<AuditEntry, "id" | "at" | "actor" | "role">;
 
 /**
- * Implémentation locale (IndexedDB) du contrat `PspApi`.
- * Toute mutation s'exécute dans UNE transaction IndexedDB : transaction, remboursement,
- * lot et entrée d'audit sont écrits ensemble ou pas du tout.
+ * Local implementation (IndexedDB) of the `PspApi` contract.
+ * Every mutation runs in ONE IndexedDB transaction: transaction, refund,
+ * batch and audit entry are written together or not at all.
  */
 export class LocalPspApi implements PspApi {
   constructor(
@@ -45,10 +45,10 @@ export class LocalPspApi implements PspApi {
     return new Date(this.clock()).toISOString();
   }
 
-  // ---------- Cycle de vie ----------
+  // ---------- Lifecycle ----------
 
   async init(): Promise<void> {
-    // Transaction « rw » : deux appels concurrents (StrictMode) sont sérialisés par IndexedDB.
+    // "rw" transaction: two concurrent calls (StrictMode) are serialized by IndexedDB.
     await this.db.transaction("rw", this.db.tables, async () => {
       const settings = await this.db.settings.get("singleton");
       if (!settings) await this.writeSeed();
@@ -80,7 +80,7 @@ export class LocalPspApi implements PspApi {
         this.db.auditLogs.toArray(),
         this.db.settings.get("singleton"),
       ]);
-      if (!settings) throw new DomainError("INVALID_STATE", "Données de démonstration absentes : réinitialisez la démo.");
+      if (!settings) throw new DomainError("INVALID_STATE", "Demo data missing: reset the demo.");
       transactions.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
       refunds.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
       settlements.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
@@ -89,7 +89,7 @@ export class LocalPspApi implements PspApi {
     });
   }
 
-  // ---------- Utilitaires internes (appelés DANS une transaction) ----------
+  // ---------- Internal helpers (called INSIDE a transaction) ----------
 
   private async audit(ctx: RequestContext, entry: AuditInput): Promise<void> {
     await this.db.auditLogs.add({
@@ -102,8 +102,8 @@ export class LocalPspApi implements PspApi {
   }
 
   /**
-   * Exécute `run` une seule fois par couple (portée, clé). Un rejeu renvoie le résultat d'origine
-   * via `replay`, sans écrire de doublon. Sans clé, `run` s'exécute normalement.
+   * Runs `run` only once per (scope, key) pair. A replay returns the original result
+   * through `replay`, without writing a duplicate. Without a key, `run` executes normally.
    */
   private async idempotent<T>(
     scope: string,
@@ -124,7 +124,7 @@ export class LocalPspApi implements PspApi {
 
   private async mustGetTransaction(id: string): Promise<Transaction> {
     const tx = await this.db.transactions.get(id);
-    if (!tx) throw new DomainError("NOT_FOUND", "Transaction introuvable.");
+    if (!tx) throw new DomainError("NOT_FOUND", "Transaction not found.");
     return tx;
   }
 
@@ -139,21 +139,21 @@ export class LocalPspApi implements PspApi {
             : await this.db.settlements.where("reference").equals(reference).count();
       if (taken === 0) return reference;
     }
-    throw new DomainError("INVALID_STATE", "Impossible de générer une référence unique.");
+    throw new DomainError("INVALID_STATE", "Unable to generate a unique reference.");
   }
 
-  // ---------- Paiements ----------
+  // ---------- Payments ----------
 
   async createPayment(input: CreatePaymentInput, ctx: RequestContext): Promise<Transaction> {
     assertCan(ctx.actor.role, "payment.create");
     if (input.outcome !== "created") assertCan(ctx.actor.role, "payment.simulate");
 
-    // Défense en profondeur : le service revalide ce que le formulaire a déjà contrôlé.
+    // Defense in depth: the service re-validates what the form has already checked.
     const amountError = paymentAmountError(input.amount);
     if (amountError) throw new DomainError("INVALID_AMOUNT", amountError);
     for (const text of [input.orderRef, input.description, input.customer.kind === "new" ? input.customer.name : ""]) {
       if (containsCardNumber(text)) {
-        throw new DomainError("VALIDATION", "Les champs libres ne doivent jamais contenir de numéro de carte.");
+        throw new DomainError("VALIDATION", "Free-text fields must never contain a card number.");
       }
     }
 
@@ -162,15 +162,15 @@ export class LocalPspApi implements PspApi {
       ctx.idempotencyKey,
       async () => {
         const merchant = await this.db.merchants.get(input.merchantId);
-        if (!merchant) throw new DomainError("NOT_FOUND", "Commerçant introuvable.");
+        if (!merchant) throw new DomainError("NOT_FOUND", "Merchant not found.");
         if (merchant.status !== "active") {
-          throw new DomainError("MERCHANT_INACTIVE", `${merchant.name} n'est pas actif : aucun nouveau paiement possible.`);
+          throw new DomainError("MERCHANT_INACTIVE", `${merchant.name} is not active: no new payment is possible.`);
         }
 
         let customer: Customer | undefined;
         if (input.customer.kind === "existing") {
           customer = await this.db.customers.get(input.customer.id);
-          if (!customer) throw new DomainError("NOT_FOUND", "Client introuvable.");
+          if (!customer) throw new DomainError("NOT_FOUND", "Customer not found.");
         } else {
           const email = input.customer.email.toLowerCase();
           customer = await this.db.customers.where("email").equals(email).first();
@@ -204,7 +204,7 @@ export class LocalPspApi implements PspApi {
           fee: 0,
           createdAt: now,
           updatedAt: now,
-          history: [{ at: now, from: null, to: "created", note: "Demande de paiement créée", actor: ctx.actor.name }],
+          history: [{ at: now, from: null, to: "created", note: "Payment request created", actor: ctx.actor.name }],
           origin: input.origin ?? "request",
         };
         if (input.outcome !== "created") {
@@ -214,7 +214,7 @@ export class LocalPspApi implements PspApi {
             feeBps: merchant.feeBps,
             method: input.method,
             failureReason: input.outcome === "failed" ? "card_declined" : undefined,
-            note: "Résultat simulé à la création (transaction de test)",
+            note: "Outcome simulated at creation (test transaction)",
           });
         }
         await this.db.transactions.add(tx);
@@ -222,8 +222,8 @@ export class LocalPspApi implements PspApi {
           action: "payment.created",
           entityType: "transaction",
           entityId: tx.id,
-          summary: `Paiement ${tx.reference} créé (${formatDA(tx.amount)}, ${merchant.name})${
-            input.outcome !== "created" ? ` — résultat simulé : ${STATUS_LABEL[tx.status]}` : ""
+          summary: `Payment ${tx.reference} created (${formatDA(tx.amount)}, ${merchant.name})${
+            input.outcome !== "created" ? ` — simulated outcome: ${STATUS_LABEL[tx.status]}` : ""
           }`,
         });
         return { result: tx, ids: [tx.id] };
@@ -239,12 +239,12 @@ export class LocalPspApi implements PspApi {
       ctx.idempotencyKey,
       async () => {
         const tx = await this.mustGetTransaction(transactionId);
-        // Rejeu logique : déjà dans l'état demandé → aucune écriture, pas de doublon d'historique.
+        // Logical replay: already in the requested state → no write, no duplicate history entry.
         if (tx.status === outcome.to) return { result: tx, ids: [tx.id] };
         const merchant = await this.db.merchants.get(tx.merchantId);
-        if (!merchant) throw new DomainError("NOT_FOUND", "Commerçant introuvable.");
+        if (!merchant) throw new DomainError("NOT_FOUND", "Merchant not found.");
         if ((outcome.to === "succeeded" || outcome.to === "pending") && merchant.status !== "active") {
-          throw new DomainError("MERCHANT_INACTIVE", `${merchant.name} n'est pas actif : le paiement ne peut pas être encaissé.`);
+          throw new DomainError("MERCHANT_INACTIVE", `${merchant.name} is not active: the payment cannot be collected.`);
         }
         const next = applyTransition(tx, outcome.to, {
           now: this.nowIso(),
@@ -252,14 +252,14 @@ export class LocalPspApi implements PspApi {
           feeBps: merchant.feeBps,
           method: outcome.method,
           failureReason: outcome.failureReason,
-          note: "Résultat simulé (sandbox)",
+          note: "Simulated outcome (sandbox)",
         });
         await this.db.transactions.put(next);
         await this.audit(ctx, {
           action: "payment.status_changed",
           entityType: "transaction",
           entityId: tx.id,
-          summary: `${tx.reference} : ${STATUS_LABEL[tx.status]} → ${STATUS_LABEL[next.status]}`,
+          summary: `${tx.reference}: ${STATUS_LABEL[tx.status]} → ${STATUS_LABEL[next.status]}`,
         });
         return { result: next, ids: [next.id] };
       },
@@ -276,11 +276,11 @@ export class LocalPspApi implements PspApi {
     if (ctx.actor.role === "operator" && input.amount > MAX_REFUND_OPERATOR) {
       throw new DomainError(
         "FORBIDDEN",
-        `Le rôle « ${ROLE_LABEL.operator} » est plafonné à ${formatDA(MAX_REFUND_OPERATOR)} par remboursement.`
+        `The "${ROLE_LABEL.operator}" role is capped at ${formatDA(MAX_REFUND_OPERATOR)} per refund.`
       );
     }
     if (input.note && containsCardNumber(input.note)) {
-      throw new DomainError("VALIDATION", "Le commentaire ne doit jamais contenir de numéro de carte.");
+      throw new DomainError("VALIDATION", "The comment must never contain a card number.");
     }
     return this.idempotent<{ refund: Refund; transaction: Transaction }>(
       "refund.create",
@@ -299,7 +299,7 @@ export class LocalPspApi implements PspApi {
           action: "refund.created",
           entityType: "refund",
           entityId: planned.refund.id,
-          summary: `Remboursement ${planned.refund.reference} de ${formatDA(planned.refund.amount)} sur ${tx.reference}`,
+          summary: `Refund ${planned.refund.reference} of ${formatDA(planned.refund.amount)} on ${tx.reference}`,
         });
         return { result: planned, ids: [planned.refund.id, tx.id] };
       },
@@ -310,7 +310,7 @@ export class LocalPspApi implements PspApi {
     );
   }
 
-  // ---------- Règlements ----------
+  // ---------- Settlements ----------
 
   async generateSettlements(ctx: RequestContext, merchantId?: string): Promise<SettlementRunResult> {
     assertCan(ctx.actor.role, "settlement.manage");
@@ -319,7 +319,7 @@ export class LocalPspApi implements PspApi {
       ctx.idempotencyKey,
       async () => {
         const merchants = (await this.db.merchants.toArray()).filter((m) => (merchantId ? m.id === merchantId : true));
-        if (merchantId && merchants.length === 0) throw new DomainError("NOT_FOUND", "Commerçant introuvable.");
+        if (merchantId && merchants.length === 0) throw new DomainError("NOT_FOUND", "Merchant not found.");
         let transactions = await this.db.transactions.toArray();
         let refunds = await this.db.refunds.toArray();
         const created: Settlement[] = [];
@@ -327,7 +327,7 @@ export class LocalPspApi implements PspApi {
 
         for (const merchant of merchants) {
           if (merchant.status !== "active") {
-            skipped.push({ merchantId: merchant.id, reason: "Règlements suspendus (commerçant non actif)." });
+            skipped.push({ merchantId: merchant.id, reason: "Settlements suspended (merchant not active)." });
             continue;
           }
           try {
@@ -348,7 +348,7 @@ export class LocalPspApi implements PspApi {
               action: "settlement.created",
               entityType: "settlement",
               entityId: built.settlement.id,
-              summary: `Lot ${built.settlement.reference} généré pour ${merchant.name} (net ${formatDA(built.settlement.net)}, simulation)`,
+              summary: `Batch ${built.settlement.reference} generated for ${merchant.name} (net ${formatDA(built.settlement.net)}, simulation)`,
             });
           } catch (e) {
             if (e instanceof DomainError && e.code === "NOTHING_TO_SETTLE") {
@@ -372,7 +372,7 @@ export class LocalPspApi implements PspApi {
       ctx.idempotencyKey,
       async () => {
         const settlement = await this.db.settlements.get(settlementId);
-        if (!settlement) throw new DomainError("NOT_FOUND", "Lot introuvable.");
+        if (!settlement) throw new DomainError("NOT_FOUND", "Batch not found.");
         const [transactions, refunds] = await Promise.all([
           this.db.transactions.where("merchantId").equals(settlement.merchantId).toArray(),
           this.db.refunds.where("merchantId").equals(settlement.merchantId).toArray(),
@@ -388,8 +388,8 @@ export class LocalPspApi implements PspApi {
           entityId: settlement.id,
           summary:
             outcome === "settled"
-              ? `Lot ${settlement.reference} marqué comme réglé (simulation, aucun virement réel)`
-              : `Lot ${settlement.reference} marqué comme échoué (simulation) — montants libérés`,
+              ? `Batch ${settlement.reference} marked as settled (simulation, no real bank transfer)`
+              : `Batch ${settlement.reference} marked as failed (simulation) — amounts released`,
         });
         return { result: resolved.settlement, ids: [settlement.id] };
       },
@@ -397,25 +397,25 @@ export class LocalPspApi implements PspApi {
     );
   }
 
-  // ---------- Paramètres & session ----------
+  // ---------- Settings & session ----------
 
   private async mustGetSettings(): Promise<AppSettings> {
     const settings = await this.db.settings.get("singleton");
-    if (!settings) throw new DomainError("INVALID_STATE", "Paramètres absents : réinitialisez la démo.");
+    if (!settings) throw new DomainError("INVALID_STATE", "Settings missing: reset the demo.");
     return settings;
   }
 
   async updateOrganization(profile: OrganizationProfile, ctx: RequestContext): Promise<void> {
     assertCan(ctx.actor.role, "settings.edit");
     const validated = validateOrganization(profile);
-    if (!validated.ok) throw new DomainError("VALIDATION", Object.values(validated.errors)[0] ?? "Profil invalide.");
+    if (!validated.ok) throw new DomainError("VALIDATION", Object.values(validated.errors)[0] ?? "Invalid profile.");
     await this.db.transaction("rw", this.db.tables, async () => {
       const settings = await this.mustGetSettings();
       await this.db.settings.put({ ...settings, organization: validated.data });
       await this.audit(ctx, {
         action: "settings.updated",
         entityType: "settings",
-        summary: "Profil de l'organisation mis à jour",
+        summary: "Organization profile updated",
       });
     });
   }
@@ -435,7 +435,7 @@ export class LocalPspApi implements PspApi {
       await this.audit(ctx, {
         action: "role.switched",
         entityType: "settings",
-        summary: `Rôle de démonstration : ${ROLE_LABEL[settings.currentRole]} → ${ROLE_LABEL[role]} (${DEMO_USERS[role].name})`,
+        summary: `Demo role: ${ROLE_LABEL[settings.currentRole]} → ${ROLE_LABEL[role]} (${DEMO_USERS[role].name})`,
       });
     });
   }
@@ -445,7 +445,7 @@ export class LocalPspApi implements PspApi {
     await this.audit(ctx, {
       action: "export.csv",
       entityType: "export",
-      summary: `Export CSV de ${count} transaction${count > 1 ? "s" : ""} (sandbox)`,
+      summary: `CSV export of ${count} transaction${count > 1 ? "s" : ""} (sandbox)`,
     });
   }
 
@@ -457,7 +457,7 @@ export class LocalPspApi implements PspApi {
       await this.audit(ctx, {
         action: "demo.reset",
         entityType: "demo",
-        summary: `Données de démonstration réinitialisées (jeu v${SEED_VERSION})`,
+        summary: `Demo data reset (dataset v${SEED_VERSION})`,
       });
     });
   }

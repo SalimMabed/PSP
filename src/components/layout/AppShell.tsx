@@ -10,7 +10,7 @@ import { usePspStore } from "@/store/usePspStore";
 import { Brand } from "./Brand";
 import { Header } from "./Header";
 
-/** Remonte en haut à chaque navigation, ou cible l'ancre (#id) et lui donne le focus. */
+/** Scrolls to the top on every navigation, or targets the anchor (#id) and focuses it. */
 function ScrollManager() {
   const { pathname, hash } = useLocation();
   const first = useRef(true);
@@ -25,9 +25,9 @@ function ScrollManager() {
       }
     }
     window.scrollTo(0, 0);
-    // Après une navigation (pas au premier affichage), place le focus sur le contenu : les lecteurs d'écran
-    // annoncent la nouvelle page et la navigation clavier repart du haut du contenu.
-    if (!first.current) document.getElementById("contenu")?.focus({ preventScroll: true });
+    // After a navigation (not on first display), moves focus to the content: screen readers
+    // announce the new page and keyboard navigation restarts from the top of the content.
+    if (!first.current) document.getElementById("content")?.focus({ preventScroll: true });
   }, [pathname, hash]);
   useEffect(() => {
     first.current = false;
@@ -69,17 +69,17 @@ function Sidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 flex-col border-r border-ivory-line bg-white lg:flex">
       <div className="px-5 pb-4 pt-5">
-        <Link to="/" aria-label="PSP Sandbox — retour au tableau de bord">
+        <Link to="/" aria-label="PSP Sandbox — back to the dashboard">
           <Brand orgName={org.name} />
         </Link>
       </div>
-      <nav aria-label="Navigation principale" className="flex-1 overflow-y-auto px-3 py-2">
+      <nav aria-label="Main navigation" className="flex-1 overflow-y-auto px-3 py-2">
         <NavList />
       </nav>
       <div className="m-3 rounded-xl border border-terracotta/30 bg-terracotta-light p-3.5">
-        <SandboxBadge label="Mode sandbox" />
+        <SandboxBadge label="Sandbox mode" />
         <p className="mb-0 mt-2 text-[12.5px] leading-snug text-terracotta-dark">
-          Transactions simulées, données fictives. Aucun paiement réel n'est traité.
+          Simulated transactions, fictitious data. No real payment is processed.
         </p>
       </div>
     </aside>
@@ -92,7 +92,7 @@ function MobileBottomNav({ onOpenMenu }: { onOpenMenu: () => void }) {
   const items = NAV_ITEMS.filter((i) => i.mobile);
   return (
     <nav
-      aria-label="Navigation rapide"
+      aria-label="Quick navigation"
       className="fixed inset-x-0 bottom-0 z-30 border-t border-ivory-line bg-white pb-[env(safe-area-inset-bottom)] lg:hidden"
     >
       <ul className="m-0 grid list-none grid-cols-5 p-0">
@@ -108,7 +108,7 @@ function MobileBottomNav({ onOpenMenu }: { onOpenMenu: () => void }) {
                 }`}
               >
                 <Icon name={item.icon} size={21} />
-                <span>{item.label === "Tableau de bord" ? "Accueil" : item.label}</span>
+                <span>{item.label === "Dashboard" ? "Home" : item.label}</span>
               </Link>
             </li>
           );
@@ -134,7 +134,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const density = useData().settings.preferences.density;
   const tick = usePspStore((s) => s.tick);
 
-  // Rafraîchit l'horloge d'affichage (périodes « aujourd'hui », ancienneté relative).
+  // Refreshes the display clock ("today" periods, relative age).
   useEffect(() => {
     const timer = window.setInterval(tick, 60_000);
     return () => window.clearInterval(timer);
@@ -146,30 +146,30 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div data-density={density} className="min-h-screen bg-ivory">
-      <a href="#contenu" className="sr-only-focusable fixed left-3 top-3 z-[70] rounded-lg bg-teal px-4 py-2 font-semibold text-white">
-        Aller au contenu principal
+      <a href="#content" className="sr-only-focusable fixed left-3 top-3 z-[70] rounded-lg bg-teal px-4 py-2 font-semibold text-white">
+        Skip to main content
       </a>
       <ScrollManager />
       <Sidebar />
       <div className="lg:pl-64">
         <div role="note" className="border-b border-terracotta/25 bg-terracotta-light px-4 py-1.5 text-center text-[12.5px] text-terracotta-dark">
-          <strong className="font-semibold">Mode sandbox</strong> — données fictives et paiements simulés, aucun paiement réel.{" "}
-          <Link to="/developpeurs#limites" className="font-semibold underline underline-offset-2">
-            Limites du prototype
+          <strong className="font-semibold">Sandbox mode</strong> — fictitious data and simulated payments, no real payment.{" "}
+          <Link to="/developers#limits" className="font-semibold underline underline-offset-2">
+            Prototype limitations
           </Link>
         </div>
         <Header onOpenMenu={() => setMenuOpen(true)} />
-        <main id="contenu" tabIndex={-1} className="mx-auto max-w-[1280px] px-4 pb-28 pt-6 outline-none sm:px-6 lg:px-8 lg:pb-12">
+        <main id="content" tabIndex={-1} className="mx-auto max-w-[1280px] px-4 pb-28 pt-6 outline-none sm:px-6 lg:px-8 lg:pb-12">
           {children}
           <footer className="mt-10 border-t border-ivory-line pt-5 text-[12.5px] leading-relaxed text-ink-muted">
-            PSP Sandbox — prototype de démonstration. Plateforme non agréée, non certifiée : aucune conformité réglementaire n'est acquise et aucun paiement
-            réel n'est traité.
+            PSP Sandbox — demonstration prototype. Unlicensed, uncertified platform: no regulatory compliance is established and no real payment
+            is processed.
           </footer>
         </main>
       </div>
       <MobileBottomNav onOpenMenu={() => setMenuOpen(true)} />
       <Modal open={menuOpen} onClose={() => setMenuOpen(false)} title="Navigation">
-        <nav aria-label="Menu complet">
+        <nav aria-label="Full menu">
           <NavList onNavigate={() => setMenuOpen(false)} />
         </nav>
       </Modal>

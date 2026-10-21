@@ -19,12 +19,12 @@ import { usePspStore } from "@/store/usePspStore";
 type Group = "all" | "success" | "open" | "failed" | "cancelled" | "refunded";
 
 const GROUPS: { id: Group; label: string; statuses: PaymentStatus[]; tone: "neutral" | "success" | "pending" | "danger" | "refund" }[] = [
-  { id: "all", label: "Tous", statuses: [], tone: "neutral" },
-  { id: "success", label: "Réussis", statuses: ["succeeded", "partially_refunded", "refunded"], tone: "success" },
-  { id: "open", label: "En attente", statuses: ["created", "pending"], tone: "pending" },
-  { id: "failed", label: "Échoués", statuses: ["failed"], tone: "danger" },
-  { id: "cancelled", label: "Annulés", statuses: ["cancelled"], tone: "neutral" },
-  { id: "refunded", label: "Remboursés", statuses: ["partially_refunded", "refunded"], tone: "refund" },
+  { id: "all", label: "All", statuses: [], tone: "neutral" },
+  { id: "success", label: "Succeeded", statuses: ["succeeded", "partially_refunded", "refunded"], tone: "success" },
+  { id: "open", label: "Pending", statuses: ["created", "pending"], tone: "pending" },
+  { id: "failed", label: "Failed", statuses: ["failed"], tone: "danger" },
+  { id: "cancelled", label: "Cancelled", statuses: ["cancelled"], tone: "neutral" },
+  { id: "refunded", label: "Refunded", statuses: ["partially_refunded", "refunded"], tone: "refund" },
 ];
 
 const tileColor: Record<(typeof GROUPS)[number]["tone"], string> = {
@@ -36,7 +36,7 @@ const tileColor: Record<(typeof GROUPS)[number]["tone"], string> = {
 };
 
 export function Dashboard() {
-  useDocumentTitle("Tableau de bord");
+  useDocumentTitle("Dashboard");
   const data = useData();
   const lookup = useLookup();
   const role = useRole();
@@ -51,7 +51,7 @@ export function Dashboard() {
 
   const selected = GROUPS.find((g) => g.id === group)!;
 
-  // Ensemble de la période (sans filtre de statut) : alimente les tuiles qui servent aussi de filtre.
+  // Whole period (without the status filter): feeds the tiles, which also act as the filter.
   const inPeriod = useMemo(() => filterTransactions(data.transactions, { range: period.range }, lookup), [data.transactions, period.range, lookup]);
   const inPeriodSummary = useMemo(() => summarize(inPeriod), [inPeriod]);
 
@@ -84,13 +84,13 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <Notice tone="sandbox" title="Données de démonstration">
-        Les montants, clients et commerçants ci-dessous sont fictifs et générés localement dans votre navigateur. Période : <strong>{period.label.toLowerCase()}</strong>.
+      <Notice tone="sandbox" title="Demo data">
+        The amounts, customers and merchants below are fictitious and generated locally in your browser. Period: <strong>{period.label.toLowerCase()}</strong>.
       </Notice>
 
       <section aria-labelledby="filter-title">
         <h2 id="filter-title" className="sr-only">
-          Filtrer par statut
+          Filter by status
         </h2>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
           {GROUPS.map((g) => (
@@ -110,54 +110,54 @@ export function Dashboard() {
           ))}
         </div>
         <p className="mt-2 text-[12.5px] text-ink-muted" aria-live="polite">
-          {group === "all" ? "Tous les statuts affichés." : `Filtre actif : « ${selected.label} » — les indicateurs, le graphique et la liste ci-dessous en tiennent compte.`}
+          {group === "all" ? "All statuses shown." : `Active filter: "${selected.label}" — the indicators, the chart and the list below take it into account.`}
         </p>
       </section>
 
-      <section aria-label="Indicateurs clés" className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section aria-label="Key indicators" className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard
-          label="Volume des paiements"
+          label="Payment volume"
           icon="settlements"
           value={formatDA(summary.volume)}
           delta={previous ? variation(summary.volume, previous.volume) : undefined}
-          sub={`Net après remboursements : ${formatDA(summary.netVolume)}`}
+          sub={`Net after refunds: ${formatDA(summary.netVolume)}`}
         />
         <KpiCard
           label="Transactions"
           icon="transactions"
           value={summary.count.toLocaleString("fr-FR")}
           delta={previous ? variation(summary.count, previous.count) : undefined}
-          sub={`${summary.capturedCount} réussie${summary.capturedCount > 1 ? "s" : ""}`}
+          sub={`${summary.capturedCount} succeeded`}
         />
         <KpiCard
-          label="Taux de réussite"
+          label="Success rate"
           icon="shield"
           tone="success"
           value={formatPercent(summary.successRate)}
-          sub={`${summary.capturedCount} réussis · ${summary.failedCount} échoués`}
+          sub={`${summary.capturedCount} succeeded · ${summary.failedCount} failed`}
         />
         <KpiCard
-          label="Remboursements"
+          label="Refunds"
           icon="refund"
           tone="refund"
           value={formatDA(summary.refundedAmount)}
           delta={previous ? variation(summary.refundedAmount, previous.refundedAmount) : undefined}
-          sub={`${summary.refundedCount} transaction${summary.refundedCount > 1 ? "s" : ""} concernée${summary.refundedCount > 1 ? "s" : ""}`}
+          sub={`${summary.refundedCount} transaction${summary.refundedCount > 1 ? "s" : ""} affected`}
         />
       </section>
       <p className="-mt-3 text-[12px] text-ink-muted">
-        Volume = paiements encaissés (réussis, partiellement ou totalement remboursés ensuite). Taux de réussite = encaissés / (encaissés + échoués). Variations
-        calculées contre la période précédente de même durée.
+        Volume = collected payments (succeeded, then partially or fully refunded). Success rate = collected / (collected + failed). Variations
+        computed against the previous period of the same length.
       </p>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <Section
           className="xl:col-span-2"
-          title="Activité"
+          title="Activity"
           description={`${selected.label} · ${period.label.toLowerCase()}`}
           actions={
             <>
-              <div role="group" aria-label="Indicateur du graphique" className="inline-flex rounded-lg border border-ivory-line bg-ivory-soft p-0.5">
+              <div role="group" aria-label="Chart metric" className="inline-flex rounded-lg border border-ivory-line bg-ivory-soft p-0.5">
                 {(["amount", "count"] as const).map((m) => (
                   <button
                     key={m}
@@ -166,12 +166,12 @@ export function Dashboard() {
                     onClick={() => setMetric(m)}
                     className={`rounded-md px-2.5 py-1 text-[12.5px] font-semibold ${metric === m ? "bg-white text-teal shadow-sm" : "text-ink-muted"}`}
                   >
-                    {m === "amount" ? "Volume (DA)" : "Nombre"}
+                    {m === "amount" ? "Volume (DA)" : "Count"}
                   </button>
                 ))}
               </div>
               <Button size="sm" onClick={() => setView(view === "chart" ? "table" : "chart")}>
-                {view === "chart" ? "Voir en tableau" : "Voir en graphique"}
+                {view === "chart" ? "View as table" : "View as chart"}
               </Button>
             </>
           }
@@ -179,7 +179,7 @@ export function Dashboard() {
           <ActivityChart buckets={series.buckets} granularity={series.granularity} metric={metric} view={view} />
         </Section>
 
-        <Section title="Méthodes de paiement" description="Volume encaissé par méthode (sandbox)">
+        <Section title="Payment methods" description="Collected volume by method (sandbox)">
           <MethodDonut slices={methods} total={summary.volume} />
         </Section>
       </div>
@@ -187,33 +187,33 @@ export function Dashboard() {
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <Section
           className="xl:col-span-2"
-          title="Dernières transactions"
+          title="Latest transactions"
           bodyClassName="p-0"
           actions={
             <Link to={listHref} className="text-[13.5px] font-semibold text-teal underline-offset-2 hover:underline">
-              Tout voir →
+              View all →
             </Link>
           }
         >
           {recent.length === 0 ? (
-            <EmptyState icon="transactions" title="Aucune transaction à afficher" action={canCreate ? <LinkButton to="/encaissement" variant="primary" icon="plus">Créer une demande de paiement</LinkButton> : undefined}>
-              Aucune transaction ne correspond à la période et au statut sélectionnés. Élargissez la période ou changez de filtre.
+            <EmptyState icon="transactions" title="No transactions to display" action={canCreate ? <LinkButton to="/collect" variant="primary" icon="plus">Create a payment request</LinkButton> : undefined}>
+              No transaction matches the selected period and status. Widen the period or change the filter.
             </EmptyState>
           ) : (
-            <TransactionTable rows={recent} lookup={lookup} columns={["customer"]} caption="Dernières transactions de la période" />
+            <TransactionTable rows={recent} lookup={lookup} columns={["customer"]} caption="Latest transactions of the period" />
           )}
         </Section>
 
         <div className="space-y-6">
-          <Section title="Alertes" description="Calculées à partir des données">
+          <Section title="Alerts" description="Computed from the data">
             {alerts.length === 0 ? (
-              <p className="m-0 text-sm text-ink-muted">Aucune alerte : tout est normal.</p>
+              <p className="m-0 text-sm text-ink-muted">No alerts: everything looks normal.</p>
             ) : (
               <ul className="m-0 list-none space-y-3 p-0">
                 {alerts.map((a) => (
                   <li key={a.id} className="rounded-xl border border-ivory-line p-3">
                     <ToneBadge tone={a.severity === "danger" ? "danger" : a.severity === "warning" ? "pending" : "neutral"}>
-                      {a.severity === "danger" ? "Critique" : a.severity === "warning" ? "À surveiller" : "Information"}
+                      {a.severity === "danger" ? "Critical" : a.severity === "warning" ? "To watch" : "Information"}
                     </ToneBadge>
                     <p className="m-0 mt-1.5 text-[14px] font-semibold leading-snug">{a.title}</p>
                     <p className="m-0 mt-0.5 text-[13px] text-ink-muted">{a.detail}</p>
@@ -226,26 +226,26 @@ export function Dashboard() {
             )}
           </Section>
 
-          <Section title="Actions rapides">
+          <Section title="Quick actions">
             <div className="grid gap-2">
               {canCreate && (
-                <LinkButton to="/encaissement" variant="primary" icon="plus" className="justify-start">
-                  Nouvelle demande de paiement
+                <LinkButton to="/collect" variant="primary" icon="plus" className="justify-start">
+                  New payment request
                 </LinkButton>
               )}
               {canCreate && (
                 <Button icon="flask" onClick={() => setTestOpen(true)} className="justify-start">
-                  Créer une transaction de test
+                  Create a test transaction
                 </Button>
               )}
               <LinkButton to="/transactions?status=created,pending" icon="clock" className="justify-start">
-                Voir les paiements en attente
+                View pending payments
               </LinkButton>
-              <LinkButton to="/reglements" icon="settlements" className="justify-start">
-                Règlements simulés
+              <LinkButton to="/settlements" icon="settlements" className="justify-start">
+                Simulated settlements
               </LinkButton>
-              <LinkButton to="/developpeurs" icon="developers" className="justify-start">
-                Documentation API
+              <LinkButton to="/developers" icon="developers" className="justify-start">
+                API documentation
               </LinkButton>
             </div>
           </Section>

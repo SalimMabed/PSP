@@ -8,12 +8,12 @@ import { NOW } from "@/test/factories";
 
 const seed = generateSeed(NOW);
 
-describe("jeu de démonstration", () => {
-  it("est reproductible : même instant → mêmes données (identifiants, références, jetons)", () => {
+describe("demo dataset", () => {
+  it("is reproducible: same instant → same data (identifiers, references, tokens)", () => {
     expect(JSON.stringify(generateSeed(NOW))).toBe(JSON.stringify(seed));
   });
 
-  it("produit un volume réaliste et une variété de statuts", () => {
+  it("produces a realistic volume and a variety of statuses", () => {
     expect(seed.transactions.length).toBeGreaterThanOrEqual(250);
     const s = summarize(seed.transactions);
     for (const status of ["succeeded", "failed", "cancelled", "pending", "partially_refunded", "refunded"] as const) {
@@ -23,22 +23,22 @@ describe("jeu de démonstration", () => {
     expect(seed.settlements.map((x) => x.status)).toEqual(expect.arrayContaining(["settled", "pending", "failed"]));
   });
 
-  it("n'utilise que des identifiants et références uniques", () => {
+  it("only uses unique identifiers and references", () => {
     const refs = [...seed.transactions.map((t) => t.reference), ...seed.refunds.map((r) => r.reference), ...seed.settlements.map((s) => s.reference)];
     expect(new Set(refs).size).toBe(refs.length);
     expect(new Set(seed.transactions.map((t) => t.id)).size).toBe(seed.transactions.length);
     expect(new Set(seed.transactions.map((t) => t.checkoutToken)).size).toBe(seed.transactions.length);
   });
 
-  it("ne contient aucune donnée personnelle réelle : domaines réservés, mentions « fictive »", () => {
+  it("contains no real personal data: reserved domains, \"fictitious\" mentions", () => {
     for (const c of seed.customers) expect(c.email).toMatch(/@client-demo\.example$/);
     for (const m of seed.merchants) {
       expect(m.email).toMatch(/\.example$/);
-      expect(m.legalName).toMatch(/fictive/);
+      expect(m.legalName).toMatch(/fictitious/);
     }
   });
 
-  it("aucune date dans le futur, et chronologie cohérente par transaction", () => {
+  it("has no date in the future, and a consistent timeline per transaction", () => {
     for (const t of seed.transactions) {
       expect(Date.parse(t.createdAt)).toBeLessThanOrEqual(NOW);
       expect(Date.parse(t.updatedAt)).toBeLessThanOrEqual(NOW);
@@ -48,7 +48,7 @@ describe("jeu de démonstration", () => {
     }
   });
 
-  it("invariants des remboursements : cumul = somme des remboursements, ≤ montant, statut cohérent", () => {
+  it("refund invariants: cumulative = sum of the refunds, ≤ amount, consistent status", () => {
     const byTx = new Map<string, number>();
     for (const r of seed.refunds) byTx.set(r.transactionId, (byTx.get(r.transactionId) ?? 0) + r.amount);
     for (const t of seed.transactions) {
@@ -62,7 +62,7 @@ describe("jeu de démonstration", () => {
     }
   });
 
-  it("le grand livre est cohérent : net = réglé + en cours + à régler", () => {
+  it("the ledger is consistent: net = settled + in progress + to be settled", () => {
     const l = computeLedger(seed.transactions, seed.refunds, seed.settlements);
     expect(l.settled + l.inFlight + l.unbatched).toBe(l.net);
     expect(l.net).toBe(l.collected - l.refunded - l.fees);
@@ -71,7 +71,7 @@ describe("jeu de démonstration", () => {
     expect(l.unbatched).toBeGreaterThan(0);
   });
 
-  it("chaque lot référence uniquement des éléments qui lui sont rattachés (sauf lot échoué)", () => {
+  it("each batch only references items attached to it (except a failed batch)", () => {
     const txById = new Map(seed.transactions.map((t) => [t.id, t]));
     for (const s of seed.settlements) {
       if (s.status === "failed") {
@@ -85,12 +85,12 @@ describe("jeu de démonstration", () => {
     }
   });
 
-  it("déclenche les alertes de démonstration attendues", () => {
+  it("triggers the expected demo alerts", () => {
     const alerts = buildAlerts(seed, NOW).map((a) => a.id);
     expect(alerts).toEqual(expect.arrayContaining(["stale-open", "settlement-failed", "unsettled", "merchants-flagged"]));
   });
 
-  it("un client de démonstration n'a aucun paiement (segment « sans paiement »)", () => {
+  it("a demo customer has no payment (\"no successful payment\" segment)", () => {
     const withTx = new Set(seed.transactions.map((t) => t.customerId));
     expect(seed.customers.some((c) => !withTx.has(c.id))).toBe(true);
   });

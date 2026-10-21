@@ -48,7 +48,7 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* --- Boutons --- */
+  /* --- Buttons --- */
   .btn {
     @apply inline-flex min-h-[40px] items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-transparent px-4 py-2 text-sm font-semibold transition-colors;
     @apply disabled:cursor-not-allowed disabled:opacity-50;
@@ -72,12 +72,12 @@
     @apply border-danger/30 bg-white text-danger hover:bg-danger-bg;
   }
 
-  /* --- Cartes --- */
+  /* --- Cards --- */
   .card {
     @apply rounded-card border border-ivory-line bg-white shadow-card;
   }
 
-  /* --- Formulaires --- */
+  /* --- Forms --- */
   .field-label {
     @apply mb-1.5 block text-[13px] font-semibold text-ink-soft;
   }
@@ -105,7 +105,7 @@
     background-size: 16px;
   }
 
-  /* --- Tableaux --- */
+  /* --- Tables --- */
   .data-table {
     @apply w-full border-collapse text-left text-sm;
   }
@@ -156,7 +156,7 @@
   }
 }
 
-/* Densité compacte (préférence d'affichage) */
+/* Compact density (display preference) */
 [data-density="compact"] .data-table tbody td {
   padding-top: 0.4rem;
   padding-bottom: 0.4rem;

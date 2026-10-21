@@ -49,7 +49,7 @@ export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "name"> {
   size?: number;
 }
 
-/** Icônes à trait (24×24), décoratives par défaut (`aria-hidden`). */
+/** Stroke icons (24×24), decorative by default (`aria-hidden`). */
 export function Icon({ name, size = 18, className, ...rest }: IconProps) {
   return (
     <svg

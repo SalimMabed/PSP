@@ -5,10 +5,10 @@ import { PERIOD_LABEL, resolvePeriod, type ResolvedPeriod } from "@/domain/perio
 import type { Role, Snapshot } from "@/domain/types";
 import { usePspStore } from "@/store/usePspStore";
 
-/** Données chargées. À n'utiliser que sous la garde « prêt » de l'application. */
+/** Loaded data. Only to be used under the application's "ready" guard. */
 export function useData(): Snapshot {
   const data = usePspStore((s) => s.data);
-  if (!data) throw new Error("useData appelé avant le chargement des données.");
+  if (!data) throw new Error("useData called before the data was loaded.");
   return data;
 }
 
@@ -26,7 +26,7 @@ export function useNow(): number {
   return usePspStore((s) => s.now);
 }
 
-/** Période globale résolue en bornes absolues à partir de l'horloge de l'interface. */
+/** Global period resolved into absolute bounds from the UI clock. */
 export function usePeriod(): ResolvedPeriod & { label: string } {
   const key = usePspStore((s) => s.period);
   const now = usePspStore((s) => s.now);
@@ -43,7 +43,7 @@ export function useDocumentTitle(title: string) {
   }, [title]);
 }
 
-/** Alertes dérivées des données courantes (notifications de l'en-tête et du tableau de bord). */
+/** Alerts derived from the current data (header notifications and dashboard). */
 export function useAlerts(): Alert[] {
   const data = usePspStore((s) => s.data);
   const now = usePspStore((s) => s.now);

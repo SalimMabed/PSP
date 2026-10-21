@@ -1,33 +1,33 @@
 import type { PeriodKey } from "./types";
 
 /**
- * L'Algérie est en UTC+1 toute l'année (pas d'heure d'été) : on s'appuie sur ce décalage fixe
- * pour définir les « jours » de façon déterministe, indépendamment du fuseau de la machine.
+ * Algeria is on UTC+1 all year round (no daylight saving time): this fixed offset is used
+ * to define "days" deterministically, regardless of the machine's time zone.
  */
 export const ALGIERS_OFFSET_MS = 60 * 60 * 1000;
 export const DAY_MS = 24 * 60 * 60 * 1000;
 
 export const PERIOD_LABEL: Record<PeriodKey, string> = {
-  today: "Aujourd'hui",
-  "7d": "7 derniers jours",
-  "30d": "30 derniers jours",
-  "90d": "90 derniers jours",
-  month: "Mois en cours",
-  all: "Toute la période",
+  today: "Today",
+  "7d": "Last 7 days",
+  "30d": "Last 30 days",
+  "90d": "Last 90 days",
+  month: "Current month",
+  all: "All time",
 };
 
 export const PERIOD_KEYS: PeriodKey[] = ["today", "7d", "30d", "90d", "month", "all"];
 
 export interface DateRange {
-  from: number; // ms epoch, inclus
-  to: number; // ms epoch, inclus
+  from: number; // ms epoch, inclusive
+  to: number; // ms epoch, inclusive
 }
 
 export function startOfAlgiersDay(ms: number): number {
   return Math.floor((ms + ALGIERS_OFFSET_MS) / DAY_MS) * DAY_MS - ALGIERS_OFFSET_MS;
 }
 
-/** « 2026-10-19 » (jour civil algérois) pour un instant donné. */
+/** "2026-10-19" (calendar day in Algiers) for a given instant. */
 export function dayKey(msOrIso: number | string): string {
   const ms = typeof msOrIso === "string" ? Date.parse(msOrIso) : msOrIso;
   return new Date(ms + ALGIERS_OFFSET_MS).toISOString().slice(0, 10);
@@ -37,7 +37,7 @@ export function monthKey(msOrIso: number | string): string {
   return dayKey(msOrIso).slice(0, 7);
 }
 
-/** Début (ms) du mois civil algérois contenant `ms`. */
+/** Start (ms) of the Algiers calendar month containing `ms`. */
 export function startOfAlgiersMonth(ms: number): number {
   const [y, m] = dayKey(ms).split("-").map(Number);
   return Date.UTC(y, m - 1, 1) - ALGIERS_OFFSET_MS;
@@ -45,13 +45,13 @@ export function startOfAlgiersMonth(ms: number): number {
 
 export interface ResolvedPeriod {
   key: PeriodKey;
-  /** null = pas de borne basse (toute la période). */
+  /** null = no lower bound (all time). */
   range: DateRange | null;
-  /** Période précédente de même durée, pour les variations (null si non comparable). */
+  /** Previous period of the same length, used for variations (null if not comparable). */
   previous: DateRange | null;
 }
 
-/** Résout une période prédéfinie en bornes absolues, à partir d'un instant `now` (ms). */
+/** Resolves a predefined period into absolute bounds, from an instant `now` (ms). */
 export function resolvePeriod(key: PeriodKey, now: number): ResolvedPeriod {
   const todayStart = startOfAlgiersDay(now);
   const endOfToday = todayStart + DAY_MS - 1;
@@ -88,16 +88,16 @@ export function inRange(iso: string, range: DateRange | null): boolean {
   return t >= range.from && t <= range.to;
 }
 
-const MONTHS_FR = [
-  "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
-  "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
+const MONTHS_EN = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
 ];
-const MONTHS_SHORT_FR = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+const MONTHS_SHORT_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-/** « 2026-09 » → « Septembre 2026 » (repris de l'application source). */
+/** "2026-09" → "September 2026" (carried over from the source application). */
 export function formatMonthLabel(yearMonth: string): string {
   const [year, month] = yearMonth.split("-").map(Number);
-  return `${MONTHS_FR[month - 1]} ${year}`;
+  return `${MONTHS_EN[month - 1]} ${year}`;
 }
 
 export function shiftMonth(yearMonth: string, delta: number): string {
@@ -110,47 +110,47 @@ export function isInMonth(isoDate: string, yearMonth: string): boolean {
   return isoDate.startsWith(yearMonth);
 }
 
-/** Les n derniers mois se terminant par `endMonth` inclus, du plus ancien au plus récent. */
+/** The last n months ending at `endMonth` (inclusive), from oldest to most recent. */
 export function getLastNMonths(n: number, endMonth: string): string[] {
   const months: string[] = [];
   for (let i = n - 1; i >= 0; i--) months.push(shiftMonth(endMonth, -i));
   return months;
 }
 
-/** « 2026-09 » → « sept. » (libellés compacts d'axe). */
+/** "2026-09" → "Sep" (compact axis labels). */
 export function formatMonthShort(yearMonth: string): string {
   const [, month] = yearMonth.split("-").map(Number);
-  return MONTHS_SHORT_FR[month - 1];
+  return MONTHS_SHORT_EN[month - 1];
 }
 
-/** « 2026-10-19 » → « 19 oct. » */
+/** "2026-10-19" → "19 Oct" */
 export function formatDayShort(key: string): string {
   const [, m, d] = key.split("-").map(Number);
-  return `${d} ${MONTHS_SHORT_FR[m - 1]}`;
+  return `${d} ${MONTHS_SHORT_EN[m - 1]}`;
 }
 
-/** « 2026-10-19T09:30:00Z » → « 19/10/2026 » (heure d'Alger). */
+/** "2026-10-19T09:30:00Z" → "19/10/2026" (Algiers time). */
 export function formatDate(iso: string): string {
   const [y, m, d] = dayKey(iso).split("-");
   return `${d}/${m}/${y}`;
 }
 
-/** « 19/10/2026 10:30 » (heure d'Alger, UTC+1). */
+/** "19/10/2026 10:30" (Algiers time, UTC+1). */
 export function formatDateTime(iso: string): string {
   const shifted = new Date(Date.parse(iso) + ALGIERS_OFFSET_MS).toISOString();
   const [y, m, d] = shifted.slice(0, 10).split("-");
   return `${d}/${m}/${y} ${shifted.slice(11, 16)}`;
 }
 
-/** « il y a 3 h », « il y a 2 j » — pour les alertes et listes compactes. */
+/** "3 h ago", "2 d ago": for alerts and compact lists. */
 export function formatRelative(iso: string, now: number): string {
   const diff = Math.max(now - Date.parse(iso), 0);
   const min = Math.floor(diff / 60_000);
-  if (min < 1) return "à l'instant";
-  if (min < 60) return `il y a ${min} min`;
+  if (min < 1) return "just now";
+  if (min < 60) return `${min} min ago`;
   const h = Math.floor(min / 60);
-  if (h < 24) return `il y a ${h} h`;
+  if (h < 24) return `${h} h ago`;
   const d = Math.floor(h / 24);
-  if (d < 30) return `il y a ${d} j`;
+  if (d < 30) return `${d} d ago`;
   return formatDate(iso);
 }

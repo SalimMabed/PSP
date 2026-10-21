@@ -54,8 +54,8 @@ function RefundForm({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
       const { refund: r, transaction } = out.value;
       pushToast(
         "success",
-        `Remboursement ${r.reference} de ${formatDA(r.amount)} enregistré (simulation) — ${
-          transaction.status === "refunded" ? "paiement intégralement remboursé" : `reste remboursable : ${formatDA(refundableAmount(transaction))}`
+        `Refund ${r.reference} of ${formatDA(r.amount)} recorded (simulation) — ${
+          transaction.status === "refunded" ? "payment fully refunded" : `remaining refundable: ${formatDA(refundableAmount(transaction))}`
         }.`
       );
       onClose();
@@ -66,22 +66,22 @@ function RefundForm({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
     <form id="refund-form" onSubmit={onSubmit} noValidate className="space-y-4">
       <dl className="grid grid-cols-3 gap-3 rounded-xl bg-ivory-soft p-3 text-center">
         <div>
-          <dt className="text-[11.5px] font-semibold uppercase tracking-wide text-ink-muted">Montant payé</dt>
+          <dt className="text-[11.5px] font-semibold uppercase tracking-wide text-ink-muted">Amount paid</dt>
           <dd className="num m-0 mt-0.5 text-[14px] font-semibold">{formatDA(tx.amount)}</dd>
         </div>
         <div>
-          <dt className="text-[11.5px] font-semibold uppercase tracking-wide text-ink-muted">Déjà remboursé</dt>
+          <dt className="text-[11.5px] font-semibold uppercase tracking-wide text-ink-muted">Already refunded</dt>
           <dd className="num m-0 mt-0.5 text-[14px] font-semibold text-refund">{formatDA(tx.refunded)}</dd>
         </div>
         <div>
-          <dt className="text-[11.5px] font-semibold uppercase tracking-wide text-ink-muted">Remboursable</dt>
+          <dt className="text-[11.5px] font-semibold uppercase tracking-wide text-ink-muted">Refundable</dt>
           <dd className="num m-0 mt-0.5 text-[14px] font-semibold text-teal">{formatDA(remaining)}</dd>
         </div>
       </dl>
 
       <div>
         <label htmlFor="refund-amount" className="field-label">
-          Montant à rembourser <span aria-hidden="true" className="text-terracotta">*</span>
+          Amount to refund <span aria-hidden="true" className="text-terracotta">*</span>
         </label>
         <div className="flex gap-2">
           <div className="relative flex-1">
@@ -100,7 +100,7 @@ function RefundForm({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
               DA
             </span>
           </div>
-          <Button onClick={() => update({ amount: minorToInput(remaining) })}>Tout rembourser</Button>
+          <Button onClick={() => update({ amount: minorToInput(remaining) })}>Refund everything</Button>
         </div>
         {errors.amount ? (
           <p id="refund-amount-err" role="alert" className="field-error">
@@ -109,19 +109,19 @@ function RefundForm({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
           </p>
         ) : (
           <p id="refund-amount-hint" className="field-hint">
-            Maximum : {formatDA(remaining)}.{role === "operator" && ` Plafond « Opérateur » : ${formatDA(MAX_REFUND_OPERATOR)}.`}
+            Maximum: {formatDA(remaining)}.{role === "operator" && ` "Operator" ceiling: ${formatDA(MAX_REFUND_OPERATOR)}.`}
           </p>
         )}
       </div>
 
       <SelectField
-        label="Motif"
+        label="Reason"
         required
         value={values.reason}
         onChange={(e) => update({ reason: e.target.value as RefundReason | "" })}
         error={errors.reason}
       >
-        <option value="">Choisir un motif…</option>
+        <option value="">Choose a reason…</option>
         {REASONS.map((r) => (
           <option key={r} value={r}>
             {REFUND_REASON_LABEL[r]}
@@ -130,13 +130,13 @@ function RefundForm({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
       </SelectField>
 
       <TextAreaField
-        label={values.reason === "other" ? "Précision du motif" : "Commentaire (facultatif)"}
+        label={values.reason === "other" ? "Reason details" : "Comment (optional)"}
         required={values.reason === "other"}
         value={values.note}
         onChange={(e) => update({ note: e.target.value })}
         error={errors.note}
         maxLength={200}
-        hint="Ne saisissez aucune donnée bancaire."
+        hint="Do not enter any banking data."
       />
 
       {action.error && (
@@ -147,14 +147,14 @@ function RefundForm({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
       )}
 
       <p className="m-0 text-[12.5px] text-ink-muted">
-        Remboursement <strong>simulé</strong> : aucune somme n'est restituée à un vrai moyen de paiement. L'action est enregistrée dans le journal d'audit.
+        <strong>Simulated</strong> refund: no money is returned to a real payment method. The action is recorded in the audit log.
       </p>
       <div className="flex justify-end gap-2 border-t border-ivory-line pt-4">
         <Button onClick={onClose} disabled={action.busy}>
-          Annuler
+          Cancel
         </Button>
         <Button type="submit" variant="accent" icon="refund" loading={action.busy}>
-          Confirmer le remboursement
+          Confirm the refund
         </Button>
       </div>
     </form>
@@ -163,7 +163,7 @@ function RefundForm({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
 
 export function RefundDialog({ tx, open, onClose }: { tx: Transaction; open: boolean; onClose: () => void }) {
   return (
-    <Modal open={open} onClose={onClose} title={`Rembourser ${tx.reference}`} description="Remboursement partiel ou total, avec motif et historique.">
+    <Modal open={open} onClose={onClose} title={`Refund ${tx.reference}`} description="Partial or full refund, with a reason and history.">
       <RefundForm tx={tx} onClose={onClose} />
     </Modal>
   );

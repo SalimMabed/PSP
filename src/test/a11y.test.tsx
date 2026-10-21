@@ -7,26 +7,26 @@ import { LocalPspApi } from "@/services/localApi";
 import { renderApp, resetStorageAndStore } from "./renderApp";
 
 /**
- * Audit automatisé axe-core (règles WCAG 2.x A/AA exécutables dans jsdom : noms accessibles, libellés,
- * rôles/ARIA valides, identifiants uniques, structure des tableaux, hiérarchie des titres…).
- * Le contraste des couleurs n'est pas calculable dans jsdom : il est vérifié séparément (voir README).
+ * Automated axe-core audit (WCAG 2.x A/AA rules that can run in jsdom: accessible names, labels,
+ * valid roles/ARIA, unique identifiers, table structure, heading hierarchy…).
+ * Color contrast cannot be computed in jsdom: it is checked separately (see the README).
  */
 async function violations(): Promise<Result[]> {
   const results = await axe.run(document.body, {
     runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"] },
     rules: {
-      "color-contrast": { enabled: false }, // non calculable sans moteur de rendu
-      region: { enabled: false }, // pages de démonstration : repères déjà fournis par header/main/nav
+      "color-contrast": { enabled: false }, // cannot be computed without a rendering engine
+      region: { enabled: false }, // demo pages: landmarks are already provided by header/main/nav
     },
   });
   return results.violations;
 }
 
 function describeViolations(list: Result[]): string {
-  return list.map((v) => `${v.id} (${v.impact}) : ${v.help}\n  ${v.nodes.slice(0, 3).map((n) => n.target.join(" ")).join("\n  ")}`).join("\n");
+  return list.map((v) => `${v.id} (${v.impact}): ${v.help}\n  ${v.nodes.slice(0, 3).map((n) => n.target.join(" ")).join("\n  ")}`).join("\n");
 }
 
-// axe-core teste la présence de ligatures d'icônes via <canvas> ; jsdom ne l'implémente pas (retourne null : géré par axe).
+// axe-core checks for icon ligatures through <canvas>; jsdom does not implement it (returns null: handled by axe).
 HTMLCanvasElement.prototype.getContext = (() => null) as unknown as typeof HTMLCanvasElement.prototype.getContext;
 
 beforeEach(async () => {
@@ -34,32 +34,32 @@ beforeEach(async () => {
   await resetStorageAndStore();
 });
 
-describe("accessibilité automatisée (axe-core)", () => {
+describe("automated accessibility (axe-core)", () => {
   const pages: [string, RegExp | string][] = [
-    ["/", "Tableau de bord"],
+    ["/", "Dashboard"],
     ["/transactions", "Transactions"],
-    ["/encaissement", "Encaissement"],
-    ["/clients", "Clients"],
-    ["/commercants", "Commerçants"],
-    ["/reglements", "Règlements"],
-    ["/developpeurs", "Espace développeur"],
-    ["/parametres", "Paramètres"],
-    ["/parametres?tab=roles", "Paramètres"],
-    ["/parametres?tab=audit", "Paramètres"],
-    ["/parametres?tab=demo", "Paramètres"],
-    ["/clients/cus_001", "Fiche client"],
-    ["/commercants/mrc_001", "Fiche commerçant"],
+    ["/collect", "Collect payments"],
+    ["/customers", "Customers"],
+    ["/merchants", "Merchants"],
+    ["/settlements", "Settlements"],
+    ["/developers", "Developer area"],
+    ["/settings", "Settings"],
+    ["/settings?tab=roles", "Settings"],
+    ["/settings?tab=audit", "Settings"],
+    ["/settings?tab=demo", "Settings"],
+    ["/customers/cus_001", "Customer profile"],
+    ["/merchants/mrc_001", "Merchant profile"],
   ];
 
-  it.each(pages)("%s ne présente aucune violation axe", async (route, title) => {
+  it.each(pages)("%s has no axe violation", async (route, title) => {
     await renderApp(route);
     await screen.findByRole("heading", { level: 1, name: title });
-    await waitFor(() => expect(document.body.textContent).not.toMatch(/Chargement de la sandbox/));
+    await waitFor(() => expect(document.body.textContent).not.toMatch(/Loading the sandbox/));
     const found = await violations();
     expect(found, describeViolations(found)).toEqual([]);
   }, 30_000);
 
-  it("la fiche transaction, la page de paiement hébergée et la boîte de remboursement sont conformes", async () => {
+  it("the transaction page, the hosted payment page and the refund dialog are compliant", async () => {
     const api = new LocalPspApi(getDatabase());
     await api.init();
     const tx = await api.createPayment(
@@ -68,12 +68,12 @@ describe("accessibilité automatisée (axe-core)", () => {
         customer: { kind: "existing", id: "cus_001" },
         amount: 1_000_000,
         currency: "DZD",
-        orderRef: "CMD-A11Y",
-        description: "Test accessibilité",
+        orderRef: "ORD-A11Y",
+        description: "Accessibility test",
         outcome: "succeeded",
         method: "cib_sandbox",
       },
-      { actor: { name: "Amine Démo", role: "admin" } }
+      { actor: { name: "Amine Demo", role: "admin" } }
     );
     const open = await api.createPayment(
       {
@@ -81,11 +81,11 @@ describe("accessibilité automatisée (axe-core)", () => {
         customer: { kind: "existing", id: "cus_001" },
         amount: 500_000,
         currency: "DZD",
-        orderRef: "CMD-A11Y-2",
-        description: "Test accessibilité ouvert",
+        orderRef: "ORD-A11Y-2",
+        description: "Accessibility test (open)",
         outcome: "created",
       },
-      { actor: { name: "Amine Démo", role: "admin" } }
+      { actor: { name: "Amine Demo", role: "admin" } }
     );
 
     const detail = await renderApp(`/transactions/${tx.id}`);
@@ -93,14 +93,14 @@ describe("accessibilité automatisée (axe-core)", () => {
     let found = await violations();
     expect(found, describeViolations(found)).toEqual([]);
 
-    await detail.user.click(screen.getByRole("button", { name: "Rembourser" }));
+    await detail.user.click(screen.getByRole("button", { name: "Refund" }));
     await screen.findByRole("dialog");
     found = await violations();
     expect(found, describeViolations(found)).toEqual([]);
     detail.unmount();
 
     const checkout = await renderApp(`/pay/${open.checkoutToken}`);
-    await screen.findByText(/Choisissez une méthode de paiement/);
+    await screen.findByText(/Choose a payment method/);
     found = await violations();
     expect(found, describeViolations(found)).toEqual([]);
     checkout.unmount();

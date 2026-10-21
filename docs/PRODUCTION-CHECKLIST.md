@@ -1,73 +1,73 @@
-# Passer de ce MVP à un PSP de production — checklist
+# Moving from this MVP to a production PSP — checklist
 
-> Ce prototype **n'est pas** un produit prêt à traiter des paiements réels. Cette liste recense ce qui manque. Elle n'est pas un avis juridique ; les exigences applicables doivent être confirmées par les autorités et conseils compétents.
+> This prototype **is not** a product ready to process real payments. This list records what is missing. It is not legal advice; the applicable requirements must be confirmed by the competent authorities and advisers.
 
-## 1. Cadre légal et réglementaire (Algérie) — à établir en premier
+## 1. Legal and regulatory framework (Algeria) — to establish first
 
-- [ ] Déterminer **quelle autorisation, quel agrément ou quel statut** est requis pour l'activité envisagée (agrégation / acquisition de paiements, monnaie électronique, passerelle technique pour le compte d'une banque…), et **quel régulateur** supervise (Banque d'Algérie, banques partenaires, opérateurs de monétique interbancaire).
-- [ ] Choisir le modèle : intermédiaire technique adossé à un établissement agréé **ou** entité agréée directement. Contractualiser avec la banque / l'acquéreur / le réseau monétique concerné.
-- [ ] Règles de **protection des données personnelles** (loi algérienne en vigueur, déclarations/autorisations auprès de l'autorité compétente), durées de conservation, droits des personnes, localisation des données.
-- [ ] **Lutte anti-blanchiment / financement du terrorisme** : KYC / KYB des commerçants, surveillance des transactions, déclaration de soupçon, listes de sanctions.
-- [ ] Conditions générales, contrats commerçants, politique de remboursement et de litiges, mentions légales, facturation et fiscalité.
-- [ ] Conformité **PCI DSS** si des données de cartes sont manipulées (en pratique : ne jamais les toucher — page hébergée / jetons du prestataire, périmètre SAQ-A).
+- [ ] Determine **which authorization, license or status** is required for the intended activity (payment aggregation / acquiring, electronic money, technical gateway on behalf of a bank…), and **which regulator** supervises it (Bank of Algeria, partner banks, interbank card-payment operators).
+- [ ] Choose the model: a technical intermediary backed by a licensed institution **or** a directly licensed entity. Contract with the relevant bank / acquirer / card-payment network.
+- [ ] **Personal data protection** rules (Algerian law in force, declarations/authorizations with the competent authority), retention periods, data subject rights, data location.
+- [ ] **Anti-money-laundering / counter-terrorist financing**: merchant KYC / KYB, transaction monitoring, suspicious activity reporting, sanctions lists.
+- [ ] Terms and conditions, merchant contracts, refund and dispute policy, legal notices, invoicing and taxation.
+- [ ] **PCI DSS** compliance if card data is handled (in practice: never touch it — provider-hosted page / tokens, SAQ-A scope).
 
-## 2. Backend autoritaire
+## 2. Authoritative backend
 
-- [ ] Service serveur qui détient la vérité : statuts, montants, soldes, remboursements, commissions, règlements. Le navigateur n'est qu'un client.
-- [ ] Réutiliser `src/domain/` (fonctions pures, testées) côté serveur ; le front ne fait qu'afficher.
-- [ ] Base de données serveur (PostgreSQL recommandé) : transactions ACID, contraintes d'intégrité (`refunded ≤ amount`, montants entiers > 0), migrations, sauvegardes chiffrées, PITR.
-- [ ] **Grand livre en partie double** immuable (écritures jamais modifiées, seulement contre-passées) plutôt que des totaux mutables.
-- [ ] Remplacer `LocalPspApi` par un `HttpPspApi` (voir `API.md`) ; supprimer IndexedDB comme source de vérité.
+- [ ] Server-side service that holds the truth: statuses, amounts, balances, refunds, fees, settlements. The browser is only a client.
+- [ ] Reuse `src/domain/` (pure, tested functions) server-side; the frontend only displays.
+- [ ] Server database (PostgreSQL recommended): ACID transactions, integrity constraints (`refunded ≤ amount`, integer amounts > 0), migrations, encrypted backups, PITR.
+- [ ] Immutable **double-entry ledger** (entries are never modified, only reversed) rather than mutable totals.
+- [ ] Replace `LocalPspApi` with an `HttpPspApi` (see `API.md`); remove IndexedDB as the source of truth.
 
-## 3. Authentification et autorisation
+## 3. Authentication and authorization
 
-- [ ] Authentification des utilisateurs du back-office (SSO / OIDC, **MFA** obligatoire), sessions sécurisées, verrouillage, journal des connexions.
-- [ ] Clés d'API par commerçant : création, rotation, révocation, portées (scopes), hachage au repos, jamais affichées après création.
-- [ ] Autorisation par rôle (RBAC) **imposée à chaque requête côté serveur** ; séparation des tâches (ex. double validation des gros remboursements et des règlements).
+- [ ] Back-office user authentication (SSO / OIDC, mandatory **MFA**), secure sessions, lockout, sign-in log.
+- [ ] API keys per merchant: creation, rotation, revocation, scopes, hashing at rest, never displayed after creation.
+- [ ] Role-based authorization (RBAC) **enforced on every request server-side**; separation of duties (e.g. dual approval of large refunds and settlements).
 
-## 4. Idempotence et concurrence
+## 4. Idempotency and concurrency
 
-- [ ] Table d'idempotence persistante (clé + empreinte de requête + réponse), TTL, détection `409` si la requête diffère.
-- [ ] Verrouillage / contrôle de concurrence sur les agrégats (remboursements simultanés, règlements) ; transitions d'état atomiques.
+- [ ] Persistent idempotency table (key + request fingerprint + response), TTL, `409` detection when the request differs.
+- [ ] Locking / concurrency control on aggregates (simultaneous refunds, settlements); atomic state transitions.
 
-## 5. Journalisation et audit
+## 5. Logging and audit
 
-- [ ] Journal d'audit **immuable** (WORM), horodaté par une source fiable, incluant acteur, IP, requête, résultat ; conservation légale.
-- [ ] Journaux applicatifs structurés **sans données sensibles** ; corrélation par `request_id` ; alertes (taux d'échec, anomalies).
+- [ ] **Immutable** audit log (WORM), timestamped by a trusted source, including actor, IP, request, result; legal retention.
+- [ ] Structured application logs **without sensitive data**; correlation by `request_id`; alerts (failure rate, anomalies).
 
-## 6. Chiffrement et secrets
+## 6. Encryption and secrets
 
-- [ ] TLS partout (HSTS), chiffrement au repos, chiffrement applicatif des champs sensibles.
-- [ ] Gestion des secrets (KMS / HSM / coffre-fort), rotation, aucun secret dans le dépôt ni le frontend.
-- [ ] Politique de mots de passe / clés, durcissement des environnements, séparation sandbox / production (clés `sk_test_` ≠ `sk_live_`).
+- [ ] TLS everywhere (HSTS), encryption at rest, application-level encryption of sensitive fields.
+- [ ] Secrets management (KMS / HSM / vault), rotation, no secret in the repository or the frontend.
+- [ ] Password / key policy, environment hardening, sandbox / production separation (`sk_test_` keys ≠ `sk_live_`).
 
-## 7. Webhooks et intégrations
+## 7. Webhooks and integrations
 
-- [ ] Envoi de webhooks signés (HMAC-SHA256, horodatage, tolérance 5 min), relivraison avec backoff, file d'attente, dédoublonnage par `event.id`, tableau de bord de livraison.
-- [ ] Intégration réelle avec l'acquéreur / le réseau de paiement (3-D Secure ou équivalent, jetons, notifications asynchrones, gestion des timeouts et des états « inconnus »).
-- [ ] Pages de paiement hébergées par le prestataire (aucune donnée de carte chez nous).
+- [ ] Sending signed webhooks (HMAC-SHA256, timestamp, 5-minute tolerance), redelivery with backoff, queue, deduplication by `event.id`, delivery dashboard.
+- [ ] Real integration with the acquirer / payment network (3-D Secure or equivalent, tokens, asynchronous notifications, handling of timeouts and "unknown" states).
+- [ ] Payment pages hosted by the provider (no card data on our side).
 
-## 8. Rapprochement et règlements réels
+## 8. Reconciliation and real settlements
 
-- [ ] Rapprochement quotidien automatisé entre transactions internes, rapports de l'acquéreur et relevés bancaires ; gestion des écarts.
-- [ ] Virements de règlement réels, calendrier (J+n), réserves, rétrofacturations (chargebacks), litiges.
-- [ ] Reporting financier et comptable, export vers la comptabilité.
+- [ ] Automated daily reconciliation between internal transactions, acquirer reports and bank statements; handling of discrepancies.
+- [ ] Real settlement transfers, schedule (D+n), reserves, chargebacks, disputes.
+- [ ] Financial and accounting reporting, export to accounting.
 
-## 9. Prévention de la fraude et limites
+## 9. Fraud prevention and limits
 
-- [ ] Règles de risque (vélocité, montants, géolocalisation, listes noires), scoring, revue manuelle.
-- [ ] Limites par commerçant / client, protection contre l'énumération, limitation de débit, protection anti-bot.
+- [ ] Risk rules (velocity, amounts, geolocation, blocklists), scoring, manual review.
+- [ ] Limits per merchant / customer, protection against enumeration, rate limiting, anti-bot protection.
 
-## 10. Qualité, exploitation et sécurité
+## 10. Quality, operations and security
 
-- [ ] Tests de charge, tests d'intrusion indépendants, revue de code sécurité, analyse des dépendances (SCA/SAST).
-- [ ] Supervision (SLO, alertes), plan de reprise d'activité, plan de réponse aux incidents, astreinte.
-- [ ] CI/CD avec déploiements reproductibles, environnements séparés, accès de production restreints.
-- [ ] Accessibilité : audit avec lecteurs d'écran réels, tests utilisateurs (français, éventuellement arabe / RTL).
+- [ ] Load tests, independent penetration tests, security code review, dependency analysis (SCA/SAST).
+- [ ] Monitoring (SLOs, alerts), disaster recovery plan, incident response plan, on-call rotation.
+- [ ] CI/CD with reproducible deployments, separate environments, restricted production access.
+- [ ] Accessibility: audit with real screen readers, user testing (English, French, possibly Arabic / RTL).
 
-## Ce que le prototype fournit déjà et qui reste utile
+## What the prototype already provides and remains useful
 
-- Modèle de données, machine d'états, règles de remboursement et de règlement, **testés** (`src/domain/`).
-- Contrat d'intégration `PspApi` et spécification REST illustrative (`API.md`).
-- Interface de back-office responsive et accessible, réutilisable comme base.
-- Jeu de données reproductible pour les démonstrations et les tests.
+- Data model, state machine, refund and settlement rules, **tested** (`src/domain/`).
+- `PspApi` integration contract and illustrative REST specification (`API.md`).
+- Responsive and accessible back-office interface, reusable as a base.
+- Reproducible dataset for demonstrations and tests.

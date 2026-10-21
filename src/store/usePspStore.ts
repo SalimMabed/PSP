@@ -27,14 +27,14 @@ export interface Toast {
 
 export type Phase = "idle" | "loading" | "ready" | "error";
 
-export const CHECKOUT_ACTOR: Actor = { name: "Client (page de paiement)", role: "checkout" };
+export const CHECKOUT_ACTOR: Actor = { name: "Customer (payment page)", role: "checkout" };
 
 interface PspState {
   phase: Phase;
   error: string | null;
   data: Snapshot | null;
   period: PeriodKey;
-  /** Horloge de l'interface (ms), rafraîchie à chaque rechargement et chaque minute. */
+  /** UI clock (ms), refreshed on every reload and every minute. */
   now: number;
   toasts: Toast[];
 
@@ -61,18 +61,18 @@ interface PspState {
 
 let toastCounter = 0;
 
-/** Message utilisateur pour n'importe quelle erreur (les erreurs métier sont déjà en français). */
+/** User-facing message for any error (business errors are already in English). */
 export function errorMessage(e: unknown): string {
   if (isDomainError(e)) return e.message;
-  if (e instanceof Error && e.name === "DatabaseClosedError") return "Le stockage local est fermé. Rechargez la page.";
-  return "Une erreur inattendue est survenue. Réessayez ; si le problème persiste, réinitialisez la démo.";
+  if (e instanceof Error && e.name === "DatabaseClosedError") return "Local storage is closed. Reload the page.";
+  return "An unexpected error occurred. Try again; if the problem persists, reset the demo.";
 }
 
 export function createPspStore(api: PspApi) {
   return create<PspState>((set, get) => {
     const ctx = (key?: string, actor?: Actor) => ({ actor: actor ?? get().currentActor(), idempotencyKey: key });
 
-    /** Exécute une mutation puis recharge l'état : l'interface lit toujours la source de vérité. */
+    /** Runs a mutation then reloads the state: the UI always reads the source of truth. */
     async function mutate<T>(fn: () => Promise<T>): Promise<T> {
       const result = await fn();
       await get().reload();
@@ -138,5 +138,5 @@ export function createPspStore(api: PspApi) {
   });
 }
 
-/** Store de l'application, branché sur la persistance locale (IndexedDB). */
+/** Application store, wired to the local persistence (IndexedDB). */
 export const usePspStore = createPspStore(new LocalPspApi(getDatabase()));

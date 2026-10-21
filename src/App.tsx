@@ -41,12 +41,12 @@ export function App() {
     return (
       <div className="min-h-screen bg-ivory">
         <ErrorState
-          title="Le stockage local est inaccessible"
-          message={`${error ?? "Erreur inconnue."} La sandbox a besoin d'IndexedDB (désactivé en navigation privée dans certains navigateurs).`}
+          title="Local storage is unavailable"
+          message={`${error ?? "Unknown error."} The sandbox needs IndexedDB (disabled in private browsing in some browsers).`}
           onRetry={() => void init()}
           extra={
             <Button onClick={() => window.location.reload()} icon="refresh">
-              Recharger la page
+              Reload the page
             </Button>
           }
         />
@@ -61,14 +61,14 @@ export function App() {
       <Route path="/" element={<Shell><Dashboard /></Shell>} />
       <Route path="/transactions" element={<Shell><Transactions /></Shell>} />
       <Route path="/transactions/:id" element={<Shell><TransactionDetail /></Shell>} />
-      <Route path="/encaissement" element={<Shell><Collect /></Shell>} />
-      <Route path="/clients" element={<Shell><Customers /></Shell>} />
-      <Route path="/clients/:id" element={<Shell><CustomerDetail /></Shell>} />
-      <Route path="/commercants" element={<Shell><Merchants /></Shell>} />
-      <Route path="/commercants/:id" element={<Shell><MerchantDetail /></Shell>} />
-      <Route path="/reglements" element={<Shell><Settlements /></Shell>} />
-      <Route path="/developpeurs" element={<Shell><Developers /></Shell>} />
-      <Route path="/parametres" element={<Shell><Settings /></Shell>} />
+      <Route path="/collect" element={<Shell><Collect /></Shell>} />
+      <Route path="/customers" element={<Shell><Customers /></Shell>} />
+      <Route path="/customers/:id" element={<Shell><CustomerDetail /></Shell>} />
+      <Route path="/merchants" element={<Shell><Merchants /></Shell>} />
+      <Route path="/merchants/:id" element={<Shell><MerchantDetail /></Shell>} />
+      <Route path="/settlements" element={<Shell><Settlements /></Shell>} />
+      <Route path="/developers" element={<Shell><Developers /></Shell>} />
+      <Route path="/settings" element={<Shell><Settings /></Shell>} />
       <Route path="*" element={<Shell><NotFound /></Shell>} />
     </Routes>
   );

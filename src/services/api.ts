@@ -13,15 +13,15 @@ import type {
 } from "@/domain/types";
 
 /**
- * Contrat de la couche « backend » du prototype.
+ * Contract of the prototype's "backend" layer.
  *
- * L'interface (React) ne parle qu'à ce contrat. `LocalPspApi` l'implémente aujourd'hui sur
- * IndexedDB ; un futur `HttpPspApi` appellerait un vrai serveur authentifié (voir docs/API.md)
- * sans modifier les pages. Chaque mutation reçoit un contexte (acteur + clé d'idempotence).
+ * The React UI only talks to this contract. `LocalPspApi` implements it today on
+ * IndexedDB; a future `HttpPspApi` would call a real authenticated server (see docs/API.md)
+ * without changing the pages. Every mutation receives a context (actor + idempotency key).
  */
 export interface RequestContext {
   actor: Actor;
-  /** Identifie l'intention utilisateur : un rejeu avec la même clé ne produit aucun doublon. */
+  /** Identifies the user intent: a replay with the same key produces no duplicate. */
   idempotencyKey?: string;
 }
 
@@ -37,7 +37,7 @@ export interface SettlementRunResult {
 }
 
 export interface PspApi {
-  /** Prépare le stockage et charge les données de démonstration si elles sont absentes. */
+  /** Prepares the storage and loads the demo data if it is missing. */
   init(): Promise<void>;
   loadSnapshot(): Promise<Snapshot>;
 

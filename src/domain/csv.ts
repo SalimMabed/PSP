@@ -4,12 +4,12 @@ import { dayKey } from "./period";
 import type { Lookup } from "./filters";
 import type { Transaction } from "./types";
 
-const SEPARATOR = ";"; // Excel en configuration française attend le point-virgule
+const SEPARATOR = ";"; // Excel in a French configuration expects a semicolon
 const BOM = "﻿";
 
 /**
- * Neutralise l'injection de formules (CSV injection) dans les champs texte saisis par des
- * utilisateurs : une cellule commençant par = + - @ ou une tabulation est préfixée par « ' ».
+ * Neutralizes formula injection (CSV injection) in user-entered text fields:
+ * a cell starting with = + - @ or a tab is prefixed with "'".
  */
 export function neutralizeFormula(value: string): string {
   return /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
@@ -23,20 +23,20 @@ export function escapeCsvCell(value: string | number | null | undefined): string
 
 export const TRANSACTION_CSV_HEADERS = [
   "reference",
-  "date_creation",
-  "date_paiement",
-  "statut",
-  "montant_da",
-  "devise",
-  "rembourse_da",
-  "commission_da",
-  "methode",
-  "commande",
+  "created_at",
+  "paid_at",
+  "status",
+  "amount_da",
+  "currency",
+  "refunded_da",
+  "fee_da",
+  "method",
+  "order",
   "description",
-  "client",
-  "email_client",
-  "commercant",
-  "motif_echec",
+  "customer",
+  "customer_email",
+  "merchant",
+  "failure_reason",
   "mode",
 ] as const;
 
@@ -65,7 +65,7 @@ export function transactionsToCsv(transactions: Transaction[], lookup: Lookup): 
     ];
     lines.push(row.map(escapeCsvCell).join(SEPARATOR));
   }
-  // CRLF + BOM UTF-8 pour une ouverture correcte des accents dans Excel
+  // CRLF + UTF-8 BOM so accented characters open correctly in Excel
   return BOM + lines.join("\r\n") + "\r\n";
 }
 

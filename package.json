@@ -2,7 +2,7 @@
   "name": "psp-sandbox",
   "private": true,
   "version": "0.1.0",
-  "description": "MVP sandbox d'un PSP (Payment Service Provider) pour le marché algérien — données fictives, aucun paiement réel.",
+  "description": "Sandbox MVP of a PSP (Payment Service Provider) for the Algerian market — fictitious data, no real payment.",
   "type": "module",
   "scripts": {
     "dev": "vite",

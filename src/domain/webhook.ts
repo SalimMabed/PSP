@@ -1,11 +1,11 @@
 /**
- * Modèle de signature de webhook ILLUSTRATIF (à implémenter côté serveur).
+ * ILLUSTRATIVE webhook signature model (to be implemented server-side).
  *
- *   PSP-Signature: t=<horodatage UNIX en secondes>,v1=<HMAC-SHA256 hex>
- *   v1 = HMAC_SHA256(secret, `${t}.${corps brut de la requête}`)
+ *   PSP-Signature: t=<UNIX timestamp in seconds>,v1=<HMAC-SHA256 hex>
+ *   v1 = HMAC_SHA256(secret, `${t}.${raw request body}`)
  *
- * Le secret du prototype est FICTIF. En production, il est généré et stocké côté serveur
- * (gestionnaire de secrets), jamais livré dans un bundle frontend.
+ * The prototype secret is FICTITIOUS. In production, it is generated and stored server-side
+ * (secrets manager) and never shipped in a frontend bundle.
  */
 
 const encoder = new TextEncoder();
@@ -30,7 +30,7 @@ export async function signWebhook(secret: string, timestampSeconds: number, rawB
   return `t=${timestampSeconds},v1=${v1}`;
 }
 
-/** Comparaison en temps constant de deux chaînes hexadécimales de même longueur. */
+/** Constant-time comparison of two hexadecimal strings of the same length. */
 export function safeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   let diff = 0;
@@ -40,7 +40,7 @@ export function safeEqual(a: string, b: string): boolean {
 
 export type VerifyResult = { valid: true } | { valid: false; reason: "malformed" | "stale" | "mismatch" };
 
-/** Vérification complète : format, tolérance d'horloge (anti-rejeu), signature. */
+/** Full verification: format, clock tolerance (anti-replay), signature. */
 export async function verifyWebhook(
   secret: string,
   header: string,
@@ -56,9 +56,9 @@ export async function verifyWebhook(
   return safeEqual(expected, parts.v1) ? { valid: true } : { valid: false, reason: "mismatch" };
 }
 
-/** Valeurs d'exemple FICTIVES affichées dans l'espace développeur. */
+/** FICTITIOUS example values displayed in the developer area. */
 export const DEMO_API_KEYS = {
   publishable: "pk_test_DEMO_00000000000000000000",
-  secret: "sk_test_DEMO_NE_PAS_UTILISER_0000000000",
-  webhookSecret: "whsec_DEMO_FICTIF_0000000000000000",
+  secret: "sk_test_DEMO_DO_NOT_USE_0000000000",
+  webhookSecret: "whsec_DEMO_FICTITIOUS_0000000000000000",
 } as const;

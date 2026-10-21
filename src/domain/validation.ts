@@ -2,7 +2,7 @@ import { z } from "zod";
 import { formatDA, paymentAmountError, parseAmountInput, MAX_REFUND_OPERATOR } from "./money";
 import type { OrganizationProfile, PaymentMethod, RefundReason, Role } from "./types";
 
-// ---------- Détection de numéros de carte (garde-fou « aucune donnée bancaire ») ----------
+// ---------- Card number detection ("no banking data" safeguard) ----------
 
 function luhnValid(digits: string): boolean {
   let sum = 0;
@@ -20,8 +20,8 @@ function luhnValid(digits: string): boolean {
 }
 
 /**
- * Détecte une séquence de 13 à 19 chiffres (espaces/tirets tolérés) valide au contrôle de Luhn,
- * c.-à-d. ressemblant à un numéro de carte. Les champs libres du prototype refusent ces saisies.
+ * Detects a sequence of 13 to 19 digits (spaces/dashes tolerated) that passes the Luhn check,
+ * i.e. that looks like a card number. The prototype's free-text fields reject such input.
  */
 export function containsCardNumber(text: string): boolean {
   const candidates = text.match(/(?:\d[ -]?){13,19}/g) ?? [];
@@ -31,19 +31,19 @@ export function containsCardNumber(text: string): boolean {
   });
 }
 
-const CARD_MESSAGE = "Ne saisissez jamais de numéro de carte ou de données bancaires dans ce champ.";
+const CARD_MESSAGE = "Never enter a card number or any banking data in this field.";
 
 const safeText = (min: number, max: number, label: string, pattern?: { regex: RegExp; message: string }) => {
   let base = z
     .string()
     .trim()
-    .min(min, min === 1 ? `${label} est obligatoire.` : `${label} : ${min} caractères minimum.`)
-    .max(max, `${label} : ${max} caractères maximum.`);
+    .min(min, min === 1 ? `${label} is required.` : `${label}: ${min} characters minimum.`)
+    .max(max, `${label}: ${max} characters maximum.`);
   if (pattern) base = base.regex(pattern.regex, pattern.message);
   return base.refine((v) => !containsCardNumber(v), CARD_MESSAGE);
 };
 
-// ---------- Paiement ----------
+// ---------- Payment ----------
 
 export type TestOutcome = "created" | "pending" | "succeeded" | "failed";
 
@@ -73,7 +73,7 @@ export interface CreatePaymentInput {
   description: string;
   outcome: TestOutcome;
   method?: PaymentMethod;
-  /** « request » = page Encaissement, « test » = transaction de test créée depuis la liste. */
+  /** "request" = Collect page, "test" = test transaction created from the list. */
   origin?: "request" | "test";
 }
 
@@ -81,7 +81,7 @@ const PHONE_RE = /^(\+213|0)[5-7]\d{8}$/;
 
 export const paymentFormSchema = z
   .object({
-    merchantId: z.string().min(1, "Choisissez un commerçant."),
+    merchantId: z.string().min(1, "Choose a merchant."),
     customerMode: z.enum(["existing", "new"]),
     customerId: z.string(),
     customerName: z.string().trim(),
@@ -89,11 +89,11 @@ export const paymentFormSchema = z
     customerPhone: z.string().trim(),
     amount: z.string(),
     currency: z.literal("DZD"),
-    orderRef: safeText(1, 40, "La référence de commande", {
+    orderRef: safeText(1, 40, "Order reference", {
       regex: /^[A-Za-z0-9][A-Za-z0-9\-_/. #]*$/,
-      message: "Référence de commande : lettres, chiffres, - _ / . # uniquement.",
+      message: "Order reference: letters, digits and - _ / . # only.",
     }),
-    description: safeText(3, 200, "La description"),
+    description: safeText(3, 200, "Description"),
     outcome: z.enum(["created", "pending", "succeeded", "failed"]),
     method: z.enum(["cib_sandbox", "edahabia_sandbox", "wallet_sandbox", "transfer_sandbox", ""]),
   })
@@ -108,21 +108,21 @@ export const paymentFormSchema = z
     }
 
     if (v.customerMode === "existing") {
-      if (!v.customerId) add("customerId", "Choisissez un client.");
+      if (!v.customerId) add("customerId", "Choose a customer.");
     } else {
-      if (v.customerName.length < 2) add("customerName", "Nom du client : 2 caractères minimum.");
-      else if (v.customerName.length > 80) add("customerName", "Nom du client : 80 caractères maximum.");
+      if (v.customerName.length < 2) add("customerName", "Customer name: 2 characters minimum.");
+      else if (v.customerName.length > 80) add("customerName", "Customer name: 80 characters maximum.");
       else if (containsCardNumber(v.customerName)) add("customerName", CARD_MESSAGE);
       if (!z.string().email().max(120).safeParse(v.customerEmail).success) {
-        add("customerEmail", "Adresse e-mail invalide.");
+        add("customerEmail", "Invalid email address.");
       }
       if (v.customerPhone && !PHONE_RE.test(v.customerPhone.replace(/[\s.-]/g, ""))) {
-        add("customerPhone", "Numéro algérien attendu (ex. 0550 00 00 00).");
+        add("customerPhone", "An Algerian phone number is expected (e.g. 0550 00 00 00).");
       }
     }
 
     if ((v.outcome === "pending" || v.outcome === "succeeded" || v.outcome === "failed") && !v.method) {
-      add("method", "Choisissez la méthode sandbox à simuler.");
+      add("method", "Choose the sandbox method to simulate.");
     }
   });
 
@@ -144,7 +144,7 @@ export function validatePaymentForm(values: PaymentFormValues): ValidationResult
   if (!result.success) return { ok: false, errors: flattenIssues(result.error) };
   const v = result.data;
   const amount = parseAmountInput(v.amount);
-  if (!amount.ok) return { ok: false, errors: { amount: amount.error } }; // inatteignable, pour le typage
+  if (!amount.ok) return { ok: false, errors: { amount: amount.error } }; // unreachable, for typing purposes
   return {
     ok: true,
     data: {
@@ -168,7 +168,7 @@ export function validatePaymentForm(values: PaymentFormValues): ValidationResult
   };
 }
 
-// ---------- Remboursement ----------
+// ---------- Refund ----------
 
 export interface RefundFormValues {
   amount: string;
@@ -193,33 +193,33 @@ export function validateRefundForm(
   else {
     amount = parsed.minor;
     if (amount > limits.remaining) {
-      errors.amount = `Maximum remboursable : ${formatDA(limits.remaining)}.`;
+      errors.amount = `Maximum refundable amount: ${formatDA(limits.remaining)}.`;
     } else if (limits.role === "operator" && amount > MAX_REFUND_OPERATOR) {
-      errors.amount = `Plafond « Opérateur » : ${formatDA(MAX_REFUND_OPERATOR)} par remboursement (demandez à un administrateur).`;
+      errors.amount = `"Operator" ceiling: ${formatDA(MAX_REFUND_OPERATOR)} per refund (ask an administrator).`;
     }
   }
-  if (!values.reason) errors.reason = "Indiquez le motif du remboursement.";
+  if (!values.reason) errors.reason = "Indicate the reason for the refund.";
   const note = values.note.trim();
-  if (note.length > 200) errors.note = "Commentaire : 200 caractères maximum.";
+  if (note.length > 200) errors.note = "Comment: 200 characters maximum.";
   else if (containsCardNumber(note)) errors.note = CARD_MESSAGE;
-  if (values.reason === "other" && note.length < 3) errors.note = "Précisez le motif (3 caractères minimum).";
+  if (values.reason === "other" && note.length < 3) errors.note = "Please specify the reason (3 characters minimum).";
 
   if (Object.keys(errors).length > 0) return { ok: false, errors };
   return { ok: true, data: { amount, reason: values.reason as RefundReason, note: note || undefined } };
 }
 
-// ---------- Organisation ----------
+// ---------- Organization ----------
 
 export const organizationSchema = z.object({
-  name: safeText(2, 80, "Le nom commercial"),
-  legalName: safeText(2, 120, "La raison sociale"),
-  email: z.string().trim().email("Adresse e-mail invalide.").max(120),
+  name: safeText(2, 80, "Business name"),
+  legalName: safeText(2, 120, "Legal name"),
+  email: z.string().trim().email("Invalid email address.").max(120),
   phone: z
     .string()
     .trim()
-    .refine((v) => v === "" || PHONE_RE.test(v.replace(/[\s.-]/g, "")), "Numéro algérien attendu (ex. 0550 00 00 00)."),
-  city: safeText(2, 60, "La ville"),
-  taxId: safeText(0, 30, "L'identifiant fiscal fictif"),
+    .refine((v) => v === "" || PHONE_RE.test(v.replace(/[\s.-]/g, "")), "An Algerian phone number is expected (e.g. 0550 00 00 00)."),
+  city: safeText(2, 60, "City"),
+  taxId: safeText(0, 30, "Fictitious tax ID"),
 });
 
 export function validateOrganization(values: OrganizationProfile): ValidationResult<OrganizationProfile> {

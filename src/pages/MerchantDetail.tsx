@@ -17,13 +17,13 @@ export function MerchantDetail() {
   const lookup = useLookup();
   const role = useRole();
   const merchant = data.merchants.find((m) => m.id === id);
-  useDocumentTitle(merchant ? merchant.name : "Commerçant introuvable");
+  useDocumentTitle(merchant ? merchant.name : "Merchant not found");
 
   if (!merchant) {
     return (
       <Section>
-        <EmptyState icon="merchants" title="Commerçant introuvable" action={<LinkButton to="/commercants" variant="primary">Retour aux commerçants</LinkButton>}>
-          Ce commerçant n'existe pas (ou la démo a été réinitialisée).
+        <EmptyState icon="merchants" title="Merchant not found" action={<LinkButton to="/merchants" variant="primary">Back to merchants</LinkButton>}>
+          This merchant does not exist (or the demo was reset).
         </EmptyState>
       </Section>
     );
@@ -37,9 +37,9 @@ export function MerchantDetail() {
 
   return (
     <div className="space-y-6">
-      <nav aria-label="Fil d'Ariane" className="text-[13px] text-ink-muted">
-        <Link to="/commercants" className="font-semibold text-teal underline-offset-2 hover:underline">
-          Commerçants
+      <nav aria-label="Breadcrumb" className="text-[13px] text-ink-muted">
+        <Link to="/merchants" className="font-semibold text-teal underline-offset-2 hover:underline">
+          Merchants
         </Link>{" "}
         / {merchant.name}
       </nav>
@@ -57,50 +57,50 @@ export function MerchantDetail() {
           </p>
         </div>
         {can(role, "payment.create") && merchant.status === "active" && (
-          <LinkButton to={`/encaissement?merchant=${merchant.id}`} variant="primary" icon="plus">
-            Nouvelle demande de paiement
+          <LinkButton to={`/collect?merchant=${merchant.id}`} variant="primary" icon="plus">
+            New payment request
           </LinkButton>
         )}
       </section>
 
       {merchant.status !== "active" && (
-        <Notice tone="warning" title={merchant.status === "suspended" ? "Compte suspendu" : "Compte en revue"}>
-          Aucune nouvelle demande de paiement ni aucun règlement ne sont possibles pour ce commerçant (simulation de contrôle de conformité).
+        <Notice tone="warning" title={merchant.status === "suspended" ? "Account suspended" : "Account under review"}>
+          No new payment request and no settlement is possible for this merchant (simulated compliance control).
         </Notice>
       )}
 
-      <section aria-label="Indicateurs du commerçant" className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Volume encaissé" icon="settlements" value={formatDA(stats.volume)} sub={`${stats.capturedCount} paiement${stats.capturedCount > 1 ? "s" : ""} réussi${stats.capturedCount > 1 ? "s" : ""}`} />
-        <KpiCard label="Remboursé" icon="refund" tone="refund" value={formatDA(ledger.refunded)} />
-        <KpiCard label="Net à régler" icon="clock" tone="pending" value={formatDA(ledger.unbatched)} sub="hors lot (simulation)" />
-        <KpiCard label="Déjà réglé" icon="check" tone="success" value={formatDA(ledger.settled)} sub={`+ ${formatDA(ledger.inFlight)} en cours`} />
+      <section aria-label="Merchant indicators" className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <KpiCard label="Collected volume" icon="settlements" value={formatDA(stats.volume)} sub={`${stats.capturedCount} successful payment${stats.capturedCount > 1 ? "s" : ""}`} />
+        <KpiCard label="Refunded" icon="refund" tone="refund" value={formatDA(ledger.refunded)} />
+        <KpiCard label="Net to settle" icon="clock" tone="pending" value={formatDA(ledger.unbatched)} sub="outside any batch (simulation)" />
+        <KpiCard label="Already settled" icon="check" tone="success" value={formatDA(ledger.settled)} sub={`+ ${formatDA(ledger.inFlight)} in progress`} />
       </section>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6">
-          <Section title="Informations">
+          <Section title="Information">
             <DefinitionList
               columns={1}
               items={[
-                { label: "Raison sociale", value: merchant.legalName },
+                { label: "Legal name", value: merchant.legalName },
                 { label: "Contact", value: merchant.email },
-                { label: "Commission simulée", value: <span className="num">{formatBps(merchant.feeBps)}</span> },
-                { label: "Cycle de règlement", value: `J+${merchant.settlementCycleDays} (indicatif)` },
-                { label: "Inscrit le", value: <span className="num">{formatDate(merchant.createdAt)}</span> },
+                { label: "Simulated fee", value: <span className="num">{formatBps(merchant.feeBps)}</span> },
+                { label: "Settlement cycle", value: `D+${merchant.settlementCycleDays} (indicative)` },
+                { label: "Registered on", value: <span className="num">{formatDate(merchant.createdAt)}</span> },
               ]}
             />
           </Section>
-          <Section title="Derniers lots de règlement" bodyClassName="p-0">
+          <Section title="Latest settlement batches" bodyClassName="p-0">
             {settlements.length === 0 ? (
-              <EmptyState icon="settlements" title="Aucun lot">
-                Aucun règlement simulé pour ce commerçant.
+              <EmptyState icon="settlements" title="No batches">
+                No simulated settlement for this merchant.
               </EmptyState>
             ) : (
               <ul className="m-0 list-none divide-y divide-ivory-line p-0">
                 {settlements.map((s) => (
                   <li key={s.id} className="flex items-center justify-between gap-2 px-5 py-3">
                     <div>
-                      <Link to={`/reglements?q=${s.reference}`} className="num text-[14px] font-semibold text-teal underline-offset-2 hover:underline">
+                      <Link to={`/settlements?q=${s.reference}`} className="num text-[14px] font-semibold text-teal underline-offset-2 hover:underline">
                         {s.reference}
                       </Link>
                       <p className="num m-0 text-[12.5px] text-ink-muted">{formatDate(s.createdAt)}</p>
@@ -118,22 +118,22 @@ export function MerchantDetail() {
 
         <Section
           className="lg:col-span-2"
-          title="Historique des paiements"
+          title="Payment history"
           bodyClassName="p-0"
           actions={
             txs.length > shown.length ? (
               <Link to={`/transactions?merchant=${merchant.id}`} className="text-[13.5px] font-semibold text-teal underline-offset-2 hover:underline">
-                Voir les {txs.length} transactions →
+                View the {txs.length} transactions →
               </Link>
             ) : undefined
           }
         >
           {txs.length === 0 ? (
-            <EmptyState icon="transactions" title="Aucun paiement">
-              Ce commerçant n'a encore reçu aucun paiement.
+            <EmptyState icon="transactions" title="No payments">
+              This merchant has not received any payment yet.
             </EmptyState>
           ) : (
-            <TransactionTable rows={shown} lookup={lookup} columns={["customer", "method"]} caption={`Paiements de ${merchant.name}`} />
+            <TransactionTable rows={shown} lookup={lookup} columns={["customer", "method"]} caption={`Payments of ${merchant.name}`} />
           )}
         </Section>
       </div>

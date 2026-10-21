@@ -11,7 +11,7 @@ export type DomainErrorCode =
   | "INVALID_STATE"
   | "VALIDATION";
 
-/** Erreur métier attendue (message destiné à l'utilisateur, en français). */
+/** Expected business error (message intended for the user, in English). */
 export class DomainError extends Error {
   readonly code: DomainErrorCode;
   constructor(code: DomainErrorCode, message: string) {

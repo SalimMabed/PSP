@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
-// Polices auto-hébergées (variantes variables) : pas de dépendance à un CDN, fonctionne hors ligne.
+// Self-hosted fonts (variable variants): no CDN dependency, works offline.
 import "@fontsource-variable/literata";
 import "@fontsource-variable/schibsted-grotesk";
 import { App } from "./App";

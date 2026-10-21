@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 
 interface PopoverProps {
-  /** Contenu du bouton déclencheur. */
+  /** Content of the trigger button. */
   trigger: ReactNode;
   triggerLabel: string;
   triggerClassName?: string;
@@ -10,7 +10,7 @@ interface PopoverProps {
   children: (close: () => void) => ReactNode;
 }
 
-/** Menu déroulant accessible : bouton aria-expanded, fermeture Échap / clic extérieur, retour du focus. */
+/** Accessible dropdown: aria-expanded button, closes on Escape / outside click, returns focus. */
 export function Popover({ trigger, triggerLabel, triggerClassName = "", align = "right", panelClassName = "", children }: PopoverProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);

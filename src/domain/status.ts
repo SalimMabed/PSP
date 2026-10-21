@@ -21,13 +21,13 @@ export const ALL_STATUSES: PaymentStatus[] = [
 ];
 
 export const STATUS_LABEL: Record<PaymentStatus, string> = {
-  created: "Créé",
-  pending: "En attente",
-  succeeded: "Réussi",
-  failed: "Échoué",
-  cancelled: "Annulé",
-  partially_refunded: "Partiellement remboursé",
-  refunded: "Remboursé",
+  created: "Created",
+  pending: "Pending",
+  succeeded: "Succeeded",
+  failed: "Failed",
+  cancelled: "Cancelled",
+  partially_refunded: "Partially refunded",
+  refunded: "Refunded",
 };
 
 export const STATUS_TONE: Record<PaymentStatus, StatusTone> = {
@@ -41,18 +41,18 @@ export const STATUS_TONE: Record<PaymentStatus, StatusTone> = {
 };
 
 export const STATUS_DESCRIPTION: Record<PaymentStatus, string> = {
-  created: "La demande de paiement existe, le client n'a pas encore agi.",
-  pending: "Le client a lancé le paiement, la confirmation est attendue.",
-  succeeded: "Paiement encaissé (simulation).",
-  failed: "Le paiement a été refusé (simulation).",
-  cancelled: "La demande a été annulée avant encaissement.",
-  partially_refunded: "Une partie du montant a été remboursée (simulation).",
-  refunded: "Le montant a été intégralement remboursé (simulation).",
+  created: "The payment request exists; the customer has not acted yet.",
+  pending: "The customer started the payment; confirmation is awaited.",
+  succeeded: "Payment collected (simulation).",
+  failed: "The payment was declined (simulation).",
+  cancelled: "The request was cancelled before collection.",
+  partially_refunded: "Part of the amount was refunded (simulation).",
+  refunded: "The amount was fully refunded (simulation).",
 };
 
 /**
- * Transitions autorisées. Les passages vers « partiellement remboursé » / « remboursé »
- * ne sont possibles QUE via un remboursement (voir `refunds.ts`), jamais par `applyTransition`.
+ * Allowed transitions. Moves to "partially refunded" / "refunded" are possible ONLY through
+ * a refund (see `refunds.ts`), never through `applyTransition`.
  */
 export const ALLOWED_TRANSITIONS: Record<PaymentStatus, PaymentStatus[]> = {
   created: ["pending", "succeeded", "failed", "cancelled"],
@@ -64,7 +64,7 @@ export const ALLOWED_TRANSITIONS: Record<PaymentStatus, PaymentStatus[]> = {
   refunded: [],
 };
 
-/** Statuts pour lesquels l'argent a bien été encaissé (même s'il a ensuite été remboursé). */
+/** Statuses for which the money was actually collected (even if it was refunded afterwards). */
 export const CAPTURED_STATUSES: readonly PaymentStatus[] = ["succeeded", "partially_refunded", "refunded"];
 export const OPEN_STATUSES: readonly PaymentStatus[] = ["created", "pending"];
 
@@ -87,7 +87,7 @@ export function canTransition(from: PaymentStatus, to: PaymentStatus): boolean {
 export interface TransitionOptions {
   now: string;
   actor: string;
-  /** Commission du commerçant en points de base — nécessaire pour passer à « réussi ». */
+  /** Merchant fee in basis points: required to move to "succeeded". */
   feeBps?: number;
   method?: PaymentMethod;
   failureReason?: FailureReason;
@@ -97,25 +97,25 @@ export interface TransitionOptions {
 const CAPTURE_LIKE: PaymentStatus[] = ["pending", "succeeded", "failed"];
 
 /**
- * Applique une transition de statut de façon pure (retourne une nouvelle transaction).
- * Lève une `DomainError` si la transition n'est pas autorisée.
+ * Applies a status transition as a pure function (returns a new transaction).
+ * Throws a `DomainError` if the transition is not allowed.
  */
 export function applyTransition(tx: Transaction, to: PaymentStatus, opts: TransitionOptions): Transaction {
   if (to === "partially_refunded" || to === "refunded") {
     throw new DomainError(
       "INVALID_TRANSITION",
-      "Un statut remboursé ne s'obtient qu'en enregistrant un remboursement."
+      "A refunded status can only be reached by recording a refund."
     );
   }
   if (!canTransition(tx.status, to)) {
     throw new DomainError(
       "INVALID_TRANSITION",
-      `Transition impossible : « ${STATUS_LABEL[tx.status]} » → « ${STATUS_LABEL[to]} ».`
+      `Invalid transition: "${STATUS_LABEL[tx.status]}" → "${STATUS_LABEL[to]}".`
     );
   }
   const method = opts.method ?? tx.method;
   if (CAPTURE_LIKE.includes(to) && !method) {
-    throw new DomainError("METHOD_REQUIRED", "Choisissez une méthode de paiement (sandbox).");
+    throw new DomainError("METHOD_REQUIRED", "Choose a payment method (sandbox).");
   }
 
   const next: Transaction = {
@@ -139,23 +139,23 @@ export function applyTransition(tx: Transaction, to: PaymentStatus, opts: Transi
 export const METHOD_LABEL: Record<PaymentMethod, string> = {
   cib_sandbox: "CIB (sandbox)",
   edahabia_sandbox: "Edahabia (sandbox)",
-  wallet_sandbox: "Portefeuille mobile (sandbox)",
-  transfer_sandbox: "Virement (sandbox)",
+  wallet_sandbox: "Mobile wallet (sandbox)",
+  transfer_sandbox: "Bank transfer (sandbox)",
 };
 
 export const ALL_METHODS = Object.keys(METHOD_LABEL) as PaymentMethod[];
 
 export const FAILURE_LABEL: Record<FailureReason, string> = {
-  card_declined: "Refus de l'émetteur (simulé)",
-  insufficient_funds: "Fonds insuffisants (simulé)",
-  expired_card: "Moyen de paiement expiré (simulé)",
-  timeout: "Délai dépassé (simulé)",
+  card_declined: "Declined by the issuer (simulated)",
+  insufficient_funds: "Insufficient funds (simulated)",
+  expired_card: "Expired payment method (simulated)",
+  timeout: "Timed out (simulated)",
 };
 
 export const REFUND_REASON_LABEL: Record<RefundReason, string> = {
-  customer_request: "Demande du client",
-  product_issue: "Produit ou service non conforme",
-  duplicate: "Paiement en double",
-  fraud_suspected: "Fraude suspectée (simulée)",
-  other: "Autre motif",
+  customer_request: "Customer request",
+  product_issue: "Product or service not as described",
+  duplicate: "Duplicate payment",
+  fraud_suspected: "Suspected fraud (simulated)",
+  other: "Other reason",
 };

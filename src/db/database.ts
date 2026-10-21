@@ -11,9 +11,9 @@ import type {
 } from "@/domain/types";
 
 /**
- * Persistance locale (IndexedDB via Dexie) — adaptée à une démonstration mono-navigateur,
- * PAS à un PSP de production (voir README § « Limites »). Toute la logique métier reste dans
- * `domain/` ; cette classe ne fait que stocker.
+ * Local persistence (IndexedDB via Dexie), suited to a single-browser demo,
+ * NOT to a production PSP (see README, "Limitations"). All business logic stays in
+ * `domain/`; this class only stores data.
  */
 export class PspDatabase extends Dexie {
   transactions!: Table<Transaction, string>;
@@ -42,7 +42,7 @@ export class PspDatabase extends Dexie {
 
 let shared: PspDatabase | null = null;
 
-/** Instance partagée par l'application (créée à la demande, ce qui facilite les tests). */
+/** Instance shared by the application (created on demand, which makes testing easier). */
 export function getDatabase(): PspDatabase {
   if (!shared) shared = new PspDatabase();
   return shared;

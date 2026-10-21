@@ -6,10 +6,10 @@ import { formatDate } from "@/domain/period";
 export type Metric = "amount" | "count";
 
 const GROUPS = [
-  { key: "captured", label: "Encaissé", color: "#1E9A68" },
-  { key: "open", label: "En attente / créé", color: "#B7791F" },
-  { key: "failed", label: "Échoué", color: "#C8472B" },
-  { key: "cancelled", label: "Annulé", color: "#7D786E" },
+  { key: "captured", label: "Collected", color: "#1E9A68" },
+  { key: "open", label: "Pending / created", color: "#B7791F" },
+  { key: "failed", label: "Failed", color: "#C8472B" },
+  { key: "cancelled", label: "Cancelled", color: "#7D786E" },
 ] as const;
 
 type GroupKey = (typeof GROUPS)[number]["key"];
@@ -35,7 +35,7 @@ function useElementWidth<T extends HTMLElement>(fallback = 640) {
   return [ref, width] as const;
 }
 
-/** Échelle « lisible » : pas de 1, 2, 2,5 ou 5 × 10^n. */
+/** "Readable" scale: steps of 1, 2, 2.5 or 5 × 10^n. */
 export function niceScale(max: number, ticks = 4): { max: number; step: number } {
   if (max <= 0) return { max: ticks, step: 1 };
   const rough = max / ticks;
@@ -59,7 +59,7 @@ function valueOf(bucket: Bucket, group: GroupKey, metric: Metric): number {
 
 function periodLabel(b: Bucket, granularity: Granularity): string {
   if (granularity === "day") return formatDate(new Date(b.from + 3600_000).toISOString());
-  if (granularity === "week") return `Semaine du ${formatDate(new Date(b.from + 3600_000).toISOString())}`;
+  if (granularity === "week") return `Week of ${formatDate(new Date(b.from + 3600_000).toISOString())}`;
   return b.label;
 }
 
@@ -82,10 +82,10 @@ export function ActivityChart({ buckets, granularity, metric, view }: Props) {
     return (
       <div className="overflow-x-auto">
         <table className="data-table compact">
-          <caption className="sr-only">Activité par période ({metric === "amount" ? "montants en DA" : "nombre de transactions"})</caption>
+          <caption className="sr-only">Activity by period ({metric === "amount" ? "amounts in DA" : "number of transactions"})</caption>
           <thead>
             <tr>
-              <th scope="col">Période</th>
+              <th scope="col">Period</th>
               {GROUPS.map((g) => (
                 <th key={g.key} scope="col" className="text-right">
                   {g.label}
@@ -129,7 +129,7 @@ export function ActivityChart({ buckets, granularity, metric, view }: Props) {
         height={HEIGHT}
         viewBox={`0 0 ${width} ${HEIGHT}`}
         role="img"
-        aria-label={`Graphique d'activité par ${granularity === "day" ? "jour" : granularity === "week" ? "semaine" : "mois"}. Utilisez la vue tableau pour lire les valeurs.`}
+        aria-label={`Activity chart by ${granularity === "day" ? "day" : granularity === "week" ? "week" : "month"}. Use the table view to read the values.`}
         onMouseLeave={() => setHover(null)}
       >
         {ticks.map((t) => (
@@ -172,7 +172,7 @@ export function ActivityChart({ buckets, granularity, metric, view }: Props) {
         })}
       </svg>
       {!hasData && (
-        <p className="pointer-events-none absolute inset-x-0 top-24 text-center text-sm text-ink-muted">Aucune transaction sur cette période.</p>
+        <p className="pointer-events-none absolute inset-x-0 top-24 text-center text-sm text-ink-muted">No transactions in this period.</p>
       )}
       {hovered && (
         <div
@@ -192,7 +192,7 @@ export function ActivityChart({ buckets, granularity, metric, view }: Props) {
           ))}
         </div>
       )}
-      <ul className="m-0 mt-2 flex list-none flex-wrap gap-x-4 gap-y-1 p-0 text-[12.5px] text-ink-muted" aria-label="Légende">
+      <ul className="m-0 mt-2 flex list-none flex-wrap gap-x-4 gap-y-1 p-0 text-[12.5px] text-ink-muted" aria-label="Legend">
         {GROUPS.map((g) => (
           <li key={g.key} className="flex items-center gap-1.5">
             <span aria-hidden="true" className="h-2.5 w-2.5 rounded-sm" style={{ background: g.color }} />

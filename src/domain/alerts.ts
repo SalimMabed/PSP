@@ -11,7 +11,7 @@ export interface Alert {
   severity: AlertSeverity;
   title: string;
   detail: string;
-  /** Route interne (avec query) ouvrant la vue correspondante. */
+  /** Internal route (with query string) that opens the matching view. */
   href: string;
   cta: string;
 }
@@ -22,7 +22,7 @@ const FAILURE_MIN_SAMPLE = 10;
 
 const order: Record<AlertSeverity, number> = { danger: 0, warning: 1, info: 2 };
 
-/** Alertes dérivées des données (aucune notification serveur : calcul local à chaque rendu). */
+/** Alerts derived from the data (no server notification: computed locally on every render). */
 export function buildAlerts(
   data: { transactions: Transaction[]; refunds: Refund[]; settlements: Settlement[]; merchants: Merchant[] },
   now: number
@@ -36,10 +36,10 @@ export function buildAlerts(
     alerts.push({
       id: "stale-open",
       severity: "warning",
-      title: `${stale.length} paiement${stale.length > 1 ? "s" : ""} en attente depuis plus de ${STALE_HOURS} h`,
-      detail: "Relancez le client ou annulez la demande pour éviter les paiements fantômes.",
+      title: `${stale.length} payment${stale.length > 1 ? "s" : ""} pending for more than ${STALE_HOURS} h`,
+      detail: "Follow up with the customer or cancel the request to avoid ghost payments.",
       href: "/transactions?status=created,pending&sort=createdAt&dir=asc",
-      cta: "Voir les paiements",
+      cta: "View payments",
     });
   }
 
@@ -50,10 +50,10 @@ export function buildAlerts(
     alerts.push({
       id: "failure-rate",
       severity: "danger",
-      title: `Taux d'échec élevé sur 7 jours (${(100 - wk.successRate).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %)`,
-      detail: `${wk.failedCount} paiements refusés sur ${decisive} tentatives décisives.`,
+      title: `High failure rate over 7 days (${(100 - wk.successRate).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %)`,
+      detail: `${wk.failedCount} declined payments out of ${decisive} conclusive attempts.`,
       href: "/transactions?status=failed",
-      cta: "Analyser les échecs",
+      cta: "Analyze failures",
     });
   }
 
@@ -63,10 +63,10 @@ export function buildAlerts(
     alerts.push({
       id: "settlement-failed",
       severity: "danger",
-      title: `${failedSettlements.length} lot${failedSettlements.length > 1 ? "s" : ""} de règlement échoué${failedSettlements.length > 1 ? "s" : ""} (simulation)`,
-      detail: "Les montants concernés sont redevenus « à régler » et peuvent être inclus dans un nouveau lot.",
-      href: "/reglements?status=failed",
-      cta: "Voir les lots",
+      title: `${failedSettlements.length} failed settlement batch${failedSettlements.length > 1 ? "es" : ""} (simulation)`,
+      detail: "The amounts involved are back to \"to be settled\" and can be included in a new batch.",
+      href: "/settlements?status=failed",
+      cta: "View batches",
     });
   }
 
@@ -75,10 +75,10 @@ export function buildAlerts(
     alerts.push({
       id: "unsettled",
       severity: "info",
-      title: `${formatDA(ledger.unbatched)} à régler (simulation)`,
-      detail: "Montants encaissés non encore inclus dans un lot de règlement.",
-      href: "/reglements",
-      cta: "Générer un règlement",
+      title: `${formatDA(ledger.unbatched)} to be settled (simulation)`,
+      detail: "Collected amounts not yet included in a settlement batch.",
+      href: "/settlements",
+      cta: "Generate a settlement",
     });
   }
 
@@ -87,10 +87,10 @@ export function buildAlerts(
     alerts.push({
       id: "merchants-flagged",
       severity: "warning",
-      title: `${flagged.length} commerçant${flagged.length > 1 ? "s" : ""} à surveiller`,
+      title: `${flagged.length} merchant${flagged.length > 1 ? "s" : ""} to watch`,
       detail: flagged.map((m) => m.name).join(", "),
-      href: "/commercants?status=under_review",
-      cta: "Voir les commerçants",
+      href: "/merchants?status=under_review",
+      cta: "View merchants",
     });
   }
 

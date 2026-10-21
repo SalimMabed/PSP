@@ -26,7 +26,7 @@ export function EmptyState({
 }
 
 export function ErrorState({
-  title = "Impossible de charger les données",
+  title = "Unable to load the data",
   message,
   onRetry,
   extra,
@@ -46,7 +46,7 @@ export function ErrorState({
       <div className="mt-5 flex flex-wrap justify-center gap-2">
         {onRetry && (
           <Button variant="primary" icon="refresh" onClick={onRetry}>
-            Réessayer
+            Retry
           </Button>
         )}
         {extra}
@@ -59,7 +59,7 @@ export function Skeleton({ className = "" }: { className?: string }) {
   return <div aria-hidden="true" className={`skeleton ${className}`} />;
 }
 
-export function LoadingScreen({ label = "Chargement de la sandbox…" }: { label?: string }) {
+export function LoadingScreen({ label = "Loading the sandbox…" }: { label?: string }) {
   return (
     <div role="status" aria-live="polite" className="flex min-h-screen flex-col items-center justify-center gap-4 bg-ivory p-6">
       <div className="w-full max-w-sm space-y-3">

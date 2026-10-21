@@ -4,42 +4,42 @@ export interface NavItem {
   to: string;
   label: string;
   icon: IconName;
-  /** Affiché dans la barre de navigation mobile (les autres vont dans « Menu »). */
+  /** Shown in the mobile navigation bar (the others go in "Menu"). */
   mobile?: boolean;
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { to: "/", label: "Tableau de bord", icon: "dashboard", mobile: true },
+  { to: "/", label: "Dashboard", icon: "dashboard", mobile: true },
   { to: "/transactions", label: "Transactions", icon: "transactions", mobile: true },
-  { to: "/encaissement", label: "Encaissement", icon: "collect", mobile: true },
-  { to: "/clients", label: "Clients", icon: "customers" },
-  { to: "/commercants", label: "Commerçants", icon: "merchants" },
-  { to: "/reglements", label: "Règlements", icon: "settlements", mobile: true },
-  { to: "/developpeurs", label: "Développeurs", icon: "developers" },
-  { to: "/parametres", label: "Paramètres", icon: "settings" },
+  { to: "/collect", label: "Collect", icon: "collect", mobile: true },
+  { to: "/customers", label: "Customers", icon: "customers" },
+  { to: "/merchants", label: "Merchants", icon: "merchants" },
+  { to: "/settlements", label: "Settlements", icon: "settlements", mobile: true },
+  { to: "/developers", label: "Developers", icon: "developers" },
+  { to: "/settings", label: "Settings", icon: "settings" },
 ];
 
 export interface PageInfo {
   title: string;
-  /** La page dépend de la période globale (sélecteur affiché dans l'en-tête). */
+  /** The page depends on the global period (selector shown in the header). */
   usesPeriod: boolean;
-  /** Entrée de navigation à surligner. */
+  /** Navigation entry to highlight. */
   navTo: string | null;
 }
 
-/** Titre (h1) et métadonnées de la page courante, y compris pour les routes dynamiques. */
+/** Title (h1) and metadata of the current page, including dynamic routes. */
 export function pageInfo(pathname: string): PageInfo {
   const p = pathname.replace(/\/+$/, "") || "/";
-  if (p === "/") return { title: "Tableau de bord", usesPeriod: true, navTo: "/" };
+  if (p === "/") return { title: "Dashboard", usesPeriod: true, navTo: "/" };
   if (p === "/transactions") return { title: "Transactions", usesPeriod: true, navTo: "/transactions" };
-  if (p.startsWith("/transactions/")) return { title: "Détail de la transaction", usesPeriod: false, navTo: "/transactions" };
-  if (p === "/encaissement") return { title: "Encaissement", usesPeriod: false, navTo: "/encaissement" };
-  if (p === "/clients") return { title: "Clients", usesPeriod: false, navTo: "/clients" };
-  if (p.startsWith("/clients/")) return { title: "Fiche client", usesPeriod: false, navTo: "/clients" };
-  if (p === "/commercants") return { title: "Commerçants", usesPeriod: false, navTo: "/commercants" };
-  if (p.startsWith("/commercants/")) return { title: "Fiche commerçant", usesPeriod: false, navTo: "/commercants" };
-  if (p === "/reglements") return { title: "Règlements", usesPeriod: false, navTo: "/reglements" };
-  if (p === "/developpeurs") return { title: "Espace développeur", usesPeriod: false, navTo: "/developpeurs" };
-  if (p === "/parametres") return { title: "Paramètres", usesPeriod: false, navTo: "/parametres" };
-  return { title: "Page introuvable", usesPeriod: false, navTo: null };
+  if (p.startsWith("/transactions/")) return { title: "Transaction details", usesPeriod: false, navTo: "/transactions" };
+  if (p === "/collect") return { title: "Collect payments", usesPeriod: false, navTo: "/collect" };
+  if (p === "/customers") return { title: "Customers", usesPeriod: false, navTo: "/customers" };
+  if (p.startsWith("/customers/")) return { title: "Customer profile", usesPeriod: false, navTo: "/customers" };
+  if (p === "/merchants") return { title: "Merchants", usesPeriod: false, navTo: "/merchants" };
+  if (p.startsWith("/merchants/")) return { title: "Merchant profile", usesPeriod: false, navTo: "/merchants" };
+  if (p === "/settlements") return { title: "Settlements", usesPeriod: false, navTo: "/settlements" };
+  if (p === "/developers") return { title: "Developer area", usesPeriod: false, navTo: "/developers" };
+  if (p === "/settings") return { title: "Settings", usesPeriod: false, navTo: "/settings" };
+  return { title: "Page not found", usesPeriod: false, navTo: null };
 }

@@ -14,7 +14,7 @@ import type { Transaction } from "@/domain/types";
 import { usePspStore } from "@/store/usePspStore";
 
 function newOrderRef(now: number): string {
-  return `CMD-${dayKey(now).replace(/-/g, "")}-${randomString(4)}`;
+  return `ORD-${dayKey(now).replace(/-/g, "")}-${randomString(4)}`;
 }
 
 function initialValues(now: number, defaults: Partial<PaymentFormValues> = {}): PaymentFormValues {
@@ -36,14 +36,14 @@ function initialValues(now: number, defaults: Partial<PaymentFormValues> = {}): 
 }
 
 const OUTCOME_LABEL: Record<TestOutcome, string> = {
-  created: "Laisser à l'état « Créé » (le client paiera sur la page hébergée)",
-  pending: "Mettre « En attente »",
-  succeeded: "Simuler un paiement réussi",
-  failed: "Simuler un refus",
+  created: "Leave as \"Created\" (the customer will pay on the hosted page)",
+  pending: "Set to \"Pending\"",
+  succeeded: "Simulate a successful payment",
+  failed: "Simulate a decline",
 };
 
 interface Props {
-  /** « request » : demande envoyée au client ; « test » : transaction de test avec résultat simulé. */
+  /** "request": request sent to the customer; "test": test transaction with a simulated outcome. */
   mode: "request" | "test";
   defaults?: Partial<PaymentFormValues>;
   submitLabel?: string;
@@ -61,7 +61,7 @@ export function PaymentForm({ mode, defaults, submitLabel, onCreated, onCancel }
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
 
-  const sortedCustomers = useMemo(() => [...customers].sort((a, b) => a.name.localeCompare(b.name, "fr")), [customers]);
+  const sortedCustomers = useMemo(() => [...customers].sort((a, b) => a.name.localeCompare(b.name, "en")), [customers]);
   const needsMethod = values.outcome !== "created";
 
   const formRef = useRef<HTMLFormElement>(null);
@@ -71,7 +71,7 @@ export function PaymentForm({ mode, defaults, submitLabel, onCreated, onCancel }
 
   function update<K extends keyof PaymentFormValues>(key: K, value: PaymentFormValues[K]) {
     const next = { ...values, [key]: value };
-    // Toute modification = nouvelle intention : on ne rejoue pas une ancienne clé d'idempotence.
+    // Any edit = a new intent: an old idempotency key is never replayed.
     intent.renew();
     setValues(next);
     if (submitted) {
@@ -86,7 +86,7 @@ export function PaymentForm({ mode, defaults, submitLabel, onCreated, onCancel }
     const result = validatePaymentForm(values);
     if (!result.ok) {
       setErrors(result.errors);
-      // Place le focus sur le premier champ en erreur (accessibilité clavier / lecteur d'écran).
+      // Moves focus to the first field in error (keyboard / screen reader accessibility).
       window.requestAnimationFrame(() => formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus());
       return;
     }
@@ -103,27 +103,27 @@ export function PaymentForm({ mode, defaults, submitLabel, onCreated, onCancel }
   const formError = action.error;
 
   return (
-    <form ref={formRef} onSubmit={onSubmit} noValidate aria-label={mode === "request" ? "Nouvelle demande de paiement" : "Nouvelle transaction de test"} className="space-y-5">
+    <form ref={formRef} onSubmit={onSubmit} noValidate aria-label={mode === "request" ? "New payment request" : "New test transaction"} className="space-y-5">
       {mode === "test" && (
-        <Notice tone="sandbox" title="Transaction de test">
-          Crée une transaction fictive avec le résultat de votre choix, pour alimenter les tableaux et tester les remboursements.
+        <Notice tone="sandbox" title="Test transaction">
+          Creates a fictitious transaction with the outcome of your choice, to populate the tables and test refunds.
         </Notice>
       )}
 
       <fieldset className="m-0 space-y-4 border-0 p-0">
-        <legend className="mb-3 p-0 text-[13px] font-semibold uppercase tracking-wide text-ink-muted">Paiement</legend>
+        <legend className="mb-3 p-0 text-[13px] font-semibold uppercase tracking-wide text-ink-muted">Payment</legend>
         <SelectField
-          label="Commerçant"
+          label="Merchant"
           required
           value={values.merchantId}
           onChange={(e) => update("merchantId", e.target.value)}
           error={errors.merchantId}
         >
-          <option value="">Choisir un commerçant…</option>
+          <option value="">Choose a merchant…</option>
           {merchants.map((m) => (
             <option key={m.id} value={m.id} disabled={m.status !== "active"}>
               {m.name}
-              {m.status !== "active" ? " (non actif)" : ""}
+              {m.status !== "active" ? " (inactive)" : ""}
             </option>
           ))}
         </SelectField>
@@ -131,14 +131,14 @@ export function PaymentForm({ mode, defaults, submitLabel, onCreated, onCancel }
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto]">
           <div>
             <label htmlFor="pay-amount" className="field-label">
-              Montant <span aria-hidden="true" className="text-terracotta">*</span>
+              Amount <span aria-hidden="true" className="text-terracotta">*</span>
             </label>
             <div className="relative">
               <input
                 id="pay-amount"
                 inputMode="decimal"
                 autoComplete="off"
-                placeholder="Ex. 12 500,50"
+                placeholder="e.g. 12500.50"
                 value={values.amount}
                 onChange={(e) => update("amount", e.target.value)}
                 aria-invalid={errors.amount ? true : undefined}
@@ -157,18 +157,18 @@ export function PaymentForm({ mode, defaults, submitLabel, onCreated, onCancel }
               </p>
             ) : (
               <p id="pay-amount-hint" className="field-hint">
-                Limites sandbox : {formatDA(MIN_PAYMENT)} à {formatDA(MAX_PAYMENT)}.
+                Sandbox limits: {formatDA(MIN_PAYMENT)} to {formatDA(MAX_PAYMENT)}.
               </p>
             )}
           </div>
-          <SelectField label="Devise" value="DZD" disabled onChange={() => undefined} className="sm:w-52">
-            <option value="DZD">DZD — Dinar algérien (DA)</option>
+          <SelectField label="Currency" value="DZD" disabled onChange={() => undefined} className="sm:w-52">
+            <option value="DZD">DZD — Algerian dinar (DA)</option>
           </SelectField>
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <TextField
-            label="Référence de commande"
+            label="Order reference"
             required
             value={values.orderRef}
             onChange={(e) => update("orderRef", e.target.value)}
@@ -182,7 +182,7 @@ export function PaymentForm({ mode, defaults, submitLabel, onCreated, onCancel }
             value={values.description}
             onChange={(e) => update("description", e.target.value)}
             error={errors.description}
-            placeholder="Ex. Abonnement trimestriel"
+            placeholder="e.g. Quarterly subscription"
             maxLength={200}
             autoComplete="off"
           />
@@ -190,8 +190,8 @@ export function PaymentForm({ mode, defaults, submitLabel, onCreated, onCancel }
       </fieldset>
 
       <fieldset className="m-0 space-y-4 border-0 p-0">
-        <legend className="mb-3 p-0 text-[13px] font-semibold uppercase tracking-wide text-ink-muted">Client (données minimales, fictives)</legend>
-        <div role="radiogroup" aria-label="Type de client" className="inline-flex rounded-xl border border-ivory-line bg-ivory-soft p-1">
+        <legend className="mb-3 p-0 text-[13px] font-semibold uppercase tracking-wide text-ink-muted">Customer (minimal, fictitious data)</legend>
+        <div role="radiogroup" aria-label="Customer type" className="inline-flex rounded-xl border border-ivory-line bg-ivory-soft p-1">
           {(["existing", "new"] as const).map((m) => (
             <button
               key={m}
@@ -203,14 +203,14 @@ export function PaymentForm({ mode, defaults, submitLabel, onCreated, onCancel }
                 values.customerMode === m ? "bg-white text-teal shadow-sm" : "text-ink-muted hover:text-ink"
               }`}
             >
-              {m === "existing" ? "Client existant" : "Nouveau client"}
+              {m === "existing" ? "Existing customer" : "New customer"}
             </button>
           ))}
         </div>
 
         {values.customerMode === "existing" ? (
-          <SelectField label="Client" required value={values.customerId} onChange={(e) => update("customerId", e.target.value)} error={errors.customerId}>
-            <option value="">Choisir un client…</option>
+          <SelectField label="Customer" required value={values.customerId} onChange={(e) => update("customerId", e.target.value)} error={errors.customerId}>
+            <option value="">Choose a customer…</option>
             {sortedCustomers.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name} — {c.email}
@@ -219,19 +219,19 @@ export function PaymentForm({ mode, defaults, submitLabel, onCreated, onCancel }
           </SelectField>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <TextField label="Nom complet" required value={values.customerName} onChange={(e) => update("customerName", e.target.value)} error={errors.customerName} autoComplete="off" />
+            <TextField label="Full name" required value={values.customerName} onChange={(e) => update("customerName", e.target.value)} error={errors.customerName} autoComplete="off" />
             <TextField
-              label="E-mail"
+              label="Email"
               type="email"
               required
               value={values.customerEmail}
               onChange={(e) => update("customerEmail", e.target.value)}
               error={errors.customerEmail}
               autoComplete="off"
-              placeholder="prenom.nom@client-demo.example"
+              placeholder="first.last@client-demo.example"
             />
             <TextField
-              label="Téléphone (facultatif)"
+              label="Phone (optional)"
               inputMode="tel"
               value={values.customerPhone}
               onChange={(e) => update("customerPhone", e.target.value)}
@@ -246,8 +246,8 @@ export function PaymentForm({ mode, defaults, submitLabel, onCreated, onCancel }
 
       {mode === "test" && (
         <fieldset className="m-0 space-y-4 border-0 p-0">
-          <legend className="mb-3 p-0 text-[13px] font-semibold uppercase tracking-wide text-ink-muted">Résultat simulé</legend>
-          <SelectField label="Résultat à appliquer à la création" value={values.outcome} onChange={(e) => update("outcome", e.target.value as TestOutcome)}>
+          <legend className="mb-3 p-0 text-[13px] font-semibold uppercase tracking-wide text-ink-muted">Simulated outcome</legend>
+          <SelectField label="Outcome to apply on creation" value={values.outcome} onChange={(e) => update("outcome", e.target.value as TestOutcome)}>
             {(Object.keys(OUTCOME_LABEL) as TestOutcome[]).map((o) => (
               <option key={o} value={o}>
                 {OUTCOME_LABEL[o]}
@@ -255,8 +255,8 @@ export function PaymentForm({ mode, defaults, submitLabel, onCreated, onCancel }
             ))}
           </SelectField>
           {needsMethod && (
-            <SelectField label="Méthode de paiement (sandbox)" required value={values.method} onChange={(e) => update("method", e.target.value as PaymentFormValues["method"])} error={errors.method}>
-              <option value="">Choisir une méthode…</option>
+            <SelectField label="Payment method (sandbox)" required value={values.method} onChange={(e) => update("method", e.target.value as PaymentFormValues["method"])} error={errors.method}>
+              <option value="">Choose a method…</option>
               {ALL_METHODS.map((m) => (
                 <option key={m} value={m}>
                   {METHOD_LABEL[m]}
@@ -276,18 +276,18 @@ export function PaymentForm({ mode, defaults, submitLabel, onCreated, onCancel }
       {submitted && Object.keys(errors).length > 0 && (
         <p role="alert" className="field-error">
           <Icon name="alert" size={14} className="mt-0.5 shrink-0" />
-          Corrigez {Object.keys(errors).length} champ{Object.keys(errors).length > 1 ? "s" : ""} signalé{Object.keys(errors).length > 1 ? "s" : ""} ci-dessus.
+          Fix the {Object.keys(errors).length} highlighted field{Object.keys(errors).length > 1 ? "s" : ""} above.
         </p>
       )}
 
       <div className="flex flex-wrap items-center justify-end gap-2">
         {onCancel && (
           <Button onClick={onCancel} disabled={action.busy}>
-            Annuler
+            Cancel
           </Button>
         )}
         <Button type="submit" variant="primary" icon="plus" loading={action.busy}>
-          {submitLabel ?? (mode === "request" ? "Créer la demande de paiement" : "Créer la transaction de test")}
+          {submitLabel ?? (mode === "request" ? "Create the payment request" : "Create the test transaction")}
         </Button>
       </div>
     </form>

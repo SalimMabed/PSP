@@ -15,15 +15,15 @@ import { plural } from "@/utils/format";
 
 type SortKey = "name" | "volume" | "count" | "last";
 const SORT_LABEL: Record<SortKey, string> = {
-  name: "Nom (A → Z)",
-  volume: "Volume encaissé",
-  count: "Nombre de transactions",
-  last: "Dernière activité",
+  name: "Name (A → Z)",
+  volume: "Collected volume",
+  count: "Number of transactions",
+  last: "Last activity",
 };
 const SEGMENT_LABEL: Record<Exclude<CustomerSegment, "">, string> = {
-  paid: "Avec au moins un paiement réussi",
-  never_paid: "Sans paiement réussi",
-  refunded: "Avec remboursement",
+  paid: "With at least one successful payment",
+  never_paid: "Without a successful payment",
+  refunded: "With a refund",
 };
 
 export function groupByCustomer(transactions: Transaction[]): Map<string, PartyStats> {
@@ -39,7 +39,7 @@ export function groupByCustomer(transactions: Transaction[]): Map<string, PartyS
 const EMPTY_STATS: PartyStats = { count: 0, capturedCount: 0, failedCount: 0, volume: 0, refundedAmount: 0, lastAt: null };
 
 export function Customers() {
-  useDocumentTitle("Clients");
+  useDocumentTitle("Customers");
   const data = useData();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
@@ -50,7 +50,7 @@ export function Customers() {
   const pageNum = Number(params.get("page")) || 1;
 
   const stats = useMemo(() => groupByCustomer(data.transactions), [data.transactions]);
-  const cities = useMemo(() => [...new Set(data.customers.map((c) => c.city).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b, "fr")), [data.customers]);
+  const cities = useMemo(() => [...new Set(data.customers.map((c) => c.city).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b, "en")), [data.customers]);
 
   const rows = useMemo(() => {
     const list = filterCustomers(data.customers, { q, city, segment }, stats);
@@ -64,7 +64,7 @@ export function Customers() {
         case "last":
           return Date.parse(s(b).lastAt ?? "1970-01-01") - Date.parse(s(a).lastAt ?? "1970-01-01");
         default:
-          return a.name.localeCompare(b.name, "fr");
+          return a.name.localeCompare(b.name, "en");
       }
     });
   }, [data.customers, q, city, segment, sort, stats]);
@@ -86,7 +86,7 @@ export function Customers() {
         <div className="grid grid-cols-1 gap-3 md:grid-cols-[2fr_1fr_1.3fr_1.2fr]">
           <div>
             <label htmlFor="cust-search" className="field-label">
-              Recherche
+              Search
             </label>
             <div className="relative">
               <Icon name="search" size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted" />
@@ -94,28 +94,28 @@ export function Customers() {
                 id="cust-search"
                 type="search"
                 className="field-input pl-10"
-                placeholder="Nom, e-mail, téléphone…"
+                placeholder="Name, email, phone…"
                 value={q}
                 onChange={(e) => setParam("q", e.target.value)}
                 autoComplete="off"
               />
             </div>
           </div>
-          <SelectField label="Ville" value={city} onChange={(e) => setParam("city", e.target.value)}>
-            <option value="">Toutes</option>
+          <SelectField label="City" value={city} onChange={(e) => setParam("city", e.target.value)}>
+            <option value="">All</option>
             {cities.map((c) => (
               <option key={c}>{c}</option>
             ))}
           </SelectField>
           <SelectField label="Segment" value={segment} onChange={(e) => setParam("segment", e.target.value)}>
-            <option value="">Tous les clients</option>
+            <option value="">All customers</option>
             {(Object.keys(SEGMENT_LABEL) as (keyof typeof SEGMENT_LABEL)[]).map((k) => (
               <option key={k} value={k}>
                 {SEGMENT_LABEL[k]}
               </option>
             ))}
           </SelectField>
-          <SelectField label="Trier par" value={sort} onChange={(e) => setParam("sort", e.target.value === "name" ? "" : e.target.value)}>
+          <SelectField label="Sort by" value={sort} onChange={(e) => setParam("sort", e.target.value === "name" ? "" : e.target.value)}>
             {(Object.keys(SORT_LABEL) as SortKey[]).map((k) => (
               <option key={k} value={k}>
                 {SORT_LABEL[k]}
@@ -124,45 +124,45 @@ export function Customers() {
           </SelectField>
         </div>
         <p className="m-0 mt-3 text-[13px] text-ink-muted" aria-live="polite">
-          {plural(rows.length, "client")}
+          {plural(rows.length, "customer")}
           {filtered && (
             <>
               {" · "}
               <button type="button" className="font-semibold text-teal underline-offset-2 hover:underline" onClick={() => setParams(new URLSearchParams(), { replace: true })}>
-                Réinitialiser les filtres
+                Reset filters
               </button>
             </>
           )}
-          {" · "}statistiques sur toute la période · données fictives
+          {" · "}statistics over the whole period · fictitious data
         </p>
       </Section>
 
       <Section bodyClassName="p-0" className="overflow-hidden">
         {rows.length === 0 ? (
-          <EmptyState icon="customers" title="Aucun client trouvé" action={<Button icon="x" onClick={() => setParams(new URLSearchParams(), { replace: true })}>Réinitialiser les filtres</Button>}>
-            Aucun client ne correspond à votre recherche.
+          <EmptyState icon="customers" title="No customer found" action={<Button icon="x" onClick={() => setParams(new URLSearchParams(), { replace: true })}>Reset filters</Button>}>
+            No customer matches your search.
           </EmptyState>
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="data-table">
-                <caption className="sr-only">Liste des clients de démonstration</caption>
+                <caption className="sr-only">List of demo customers</caption>
                 <thead>
                   <tr>
-                    <th scope="col">Client</th>
-                    <th scope="col" className="hidden md:table-cell">Ville</th>
+                    <th scope="col">Customer</th>
+                    <th scope="col" className="hidden md:table-cell">City</th>
                     <th scope="col" className="text-right">Transactions</th>
-                    <th scope="col" className="text-right">Volume encaissé</th>
-                    <th scope="col" className="hidden lg:table-cell">Dernière activité</th>
+                    <th scope="col" className="text-right">Collected volume</th>
+                    <th scope="col" className="hidden lg:table-cell">Last activity</th>
                   </tr>
                 </thead>
                 <tbody>
                   {page.items.map((c) => {
                     const s = stats.get(c.id) ?? EMPTY_STATS;
                     return (
-                      <tr key={c.id} className="row-link cursor-pointer" onClick={(e) => !(e.target as HTMLElement).closest("a") && navigate(`/clients/${c.id}`)}>
+                      <tr key={c.id} className="row-link cursor-pointer" onClick={(e) => !(e.target as HTMLElement).closest("a") && navigate(`/customers/${c.id}`)}>
                         <td>
-                          <Link to={`/clients/${c.id}`} className="font-semibold text-teal underline-offset-2 hover:underline">
+                          <Link to={`/customers/${c.id}`} className="font-semibold text-teal underline-offset-2 hover:underline">
                             {c.name}
                           </Link>
                           <div className="text-[12.5px] text-ink-muted">{c.email}</div>
@@ -170,20 +170,20 @@ export function Customers() {
                         <td className="hidden md:table-cell">{c.city ?? "—"}</td>
                         <td className="num text-right">
                           {s.count}
-                          {s.failedCount > 0 && <div className="text-[12px] text-danger">{s.failedCount} échec{s.failedCount > 1 ? "s" : ""}</div>}
+                          {s.failedCount > 0 && <div className="text-[12px] text-danger">{s.failedCount} failure{s.failedCount > 1 ? "s" : ""}</div>}
                         </td>
                         <td className="num text-right font-semibold">
                           {formatDA(s.volume)}
-                          {s.refundedAmount > 0 && <div className="text-[12px] font-normal text-refund">−{formatDA(s.refundedAmount)} remboursé</div>}
+                          {s.refundedAmount > 0 && <div className="text-[12px] font-normal text-refund">−{formatDA(s.refundedAmount)} refunded</div>}
                         </td>
-                        <td className="num hidden text-ink-soft lg:table-cell">{s.lastAt ? formatDate(s.lastAt) : "Aucune"}</td>
+                        <td className="num hidden text-ink-soft lg:table-cell">{s.lastAt ? formatDate(s.lastAt) : "None"}</td>
                       </tr>
                     );
                   })}
                 </tbody>
               </table>
             </div>
-            <Pagination page={page} onPage={(n) => setParam("page", n > 1 ? String(n) : "")} label="clients" />
+            <Pagination page={page} onPage={(n) => setParam("page", n > 1 ? String(n) : "")} label="customers" />
           </>
         )}
       </Section>

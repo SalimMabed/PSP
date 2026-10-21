@@ -33,7 +33,7 @@ function ToastItem({ toast }: { toast: Toast }) {
       <button
         type="button"
         onClick={() => dismiss(toast.id)}
-        aria-label="Fermer la notification"
+        aria-label="Dismiss the notification"
         className="-mr-1 rounded-md p-1 text-ink-muted hover:bg-ivory-soft"
       >
         <Icon name="x" size={15} />
@@ -42,7 +42,7 @@ function ToastItem({ toast }: { toast: Toast }) {
   );
 }
 
-/** Zone live : les messages de réussite / d'erreur sont annoncés par les lecteurs d'écran. */
+/** Live region: success / error messages are announced by screen readers. */
 export function Toasts() {
   const toasts = usePspStore((s) => s.toasts);
   return (

@@ -17,7 +17,7 @@ function PeriodSelect() {
   return (
     <div className="flex items-center gap-2">
       <label htmlFor="period-select" className="hidden text-[13px] font-semibold text-ink-muted xl:block">
-        Période
+        Period
       </label>
       <div className="relative">
         <Icon name="clock" size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted" />
@@ -26,7 +26,7 @@ function PeriodSelect() {
           value={period}
           onChange={(e) => setPeriod(e.target.value as PeriodKey)}
           className="field-input field-select !min-h-[38px] !py-1 pl-9 text-[13.5px]"
-          aria-label="Période d'analyse"
+          aria-label="Analysis period"
         >
           {PERIOD_KEYS.map((k) => (
             <option key={k} value={k}>
@@ -40,13 +40,13 @@ function PeriodSelect() {
 }
 
 const SEVERITY_TONE = { danger: "danger", warning: "pending", info: "neutral" } as const;
-const SEVERITY_LABEL = { danger: "Critique", warning: "À surveiller", info: "Information" } as const;
+const SEVERITY_LABEL = { danger: "Critical", warning: "To watch", info: "Information" } as const;
 
 function NotificationsMenu() {
   const alerts = useAlerts();
   return (
     <Popover
-      triggerLabel={alerts.length ? `Notifications : ${alerts.length} alerte${alerts.length > 1 ? "s" : ""}` : "Notifications : aucune alerte"}
+      triggerLabel={alerts.length ? `Notifications: ${alerts.length} alert${alerts.length > 1 ? "s" : ""}` : "Notifications: no alerts"}
       triggerClassName="relative flex h-10 w-10 items-center justify-center rounded-full border border-ivory-line bg-white text-ink-soft hover:bg-ivory-soft"
       trigger={
         <>
@@ -65,9 +65,9 @@ function NotificationsMenu() {
     >
       {(close) => (
         <div>
-          <p className="border-b border-ivory-line px-4 py-3 text-sm font-semibold">Alertes</p>
+          <p className="border-b border-ivory-line px-4 py-3 text-sm font-semibold">Alerts</p>
           {alerts.length === 0 ? (
-            <p className="px-4 py-6 text-center text-sm text-ink-muted">Aucune alerte pour le moment.</p>
+            <p className="px-4 py-6 text-center text-sm text-ink-muted">No alerts at the moment.</p>
           ) : (
             <ul className="m-0 max-h-[60vh] list-none divide-y divide-ivory-line overflow-y-auto p-0">
               {alerts.map((a) => (
@@ -98,12 +98,12 @@ function ProfileMenu() {
   const pushToast = usePspStore((s) => s.pushToast);
   const action = useAction(async (next: Role) => {
     await switchRole(next);
-    pushToast("info", `Rôle de démonstration : ${ROLE_LABEL[next]}. Les droits changent immédiatement.`);
+    pushToast("info", `Demo role: ${ROLE_LABEL[next]}. Permissions change immediately.`);
   });
 
   return (
     <Popover
-      triggerLabel={`Profil : ${user.name}, ${ROLE_LABEL[role]}`}
+      triggerLabel={`Profile: ${user.name}, ${ROLE_LABEL[role]}`}
       triggerClassName="flex items-center gap-2 rounded-full border border-ivory-line bg-white py-1 pl-1 pr-3 hover:bg-ivory-soft"
       trigger={
         <>
@@ -123,7 +123,7 @@ function ProfileMenu() {
           <p className="m-0 text-[12.5px] text-ink-muted">{user.email}</p>
           <p className="mt-1 text-[12.5px] text-ink-muted">{data.settings.organization.name}</p>
           <fieldset className="m-0 mt-3 border-0 p-0">
-            <legend className="mb-1.5 p-0 text-[12px] font-semibold uppercase tracking-wide text-ink-muted">Rôle de démonstration</legend>
+            <legend className="mb-1.5 p-0 text-[12px] font-semibold uppercase tracking-wide text-ink-muted">Demo role</legend>
             <div className="grid grid-cols-2 gap-2">
               {(["admin", "operator"] as const).map((r) => (
                 <button
@@ -141,12 +141,12 @@ function ProfileMenu() {
               ))}
             </div>
             <p className="mt-2 text-[12px] leading-snug text-ink-muted">
-              Simulation sans authentification : aucun contrôle de sécurité réel côté navigateur.
+              Simulation without authentication: no real security control in the browser.
             </p>
           </fieldset>
-          <Link to="/parametres" onClick={close} className="btn btn-secondary btn-sm mt-3 w-full">
+          <Link to="/settings" onClick={close} className="btn btn-secondary btn-sm mt-3 w-full">
             <Icon name="settings" size={15} />
-            Paramètres et journal d'audit
+            Settings and audit log
           </Link>
         </div>
       )}
@@ -163,7 +163,7 @@ export function Header({ onOpenMenu }: { onOpenMenu: () => void }) {
         <button
           type="button"
           onClick={onOpenMenu}
-          aria-label="Ouvrir le menu de navigation"
+          aria-label="Open the navigation menu"
           className="flex h-10 w-10 items-center justify-center rounded-full border border-ivory-line bg-white text-ink-soft hover:bg-ivory-soft lg:hidden"
         >
           <Icon name="menu" size={19} />

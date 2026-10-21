@@ -8,7 +8,7 @@ import { usePspStore } from "@/store/usePspStore";
 import type { Actor, Transaction } from "@/domain/types";
 import { forgetMemoryState, renderApp, resetStorageAndStore } from "./renderApp";
 
-const admin: Actor = { name: "Amine Démo", role: "admin" };
+const admin: Actor = { name: "Amine Demo", role: "admin" };
 const H = (name: string | RegExp) => screen.findByRole("heading", { level: 1, name });
 
 async function createTx(overrides: Record<string, unknown> = {}): Promise<Transaction> {
@@ -20,8 +20,8 @@ async function createTx(overrides: Record<string, unknown> = {}): Promise<Transa
       customer: { kind: "existing", id: "cus_001" },
       amount: 2_500_000,
       currency: "DZD",
-      orderRef: "CMD-UI-TEST",
-      description: "Commande test interface",
+      orderRef: "ORD-UI-TEST",
+      description: "UI test order",
       outcome: "created",
       ...overrides,
     },
@@ -36,50 +36,50 @@ beforeEach(async () => {
   await resetStorageAndStore();
 });
 
-describe("navigation et pages principales", () => {
+describe("navigation and main pages", () => {
   const routes: [string, string | RegExp][] = [
-    ["/", "Tableau de bord"],
+    ["/", "Dashboard"],
     ["/transactions", "Transactions"],
-    ["/encaissement", "Encaissement"],
-    ["/clients", "Clients"],
-    ["/commercants", "Commerçants"],
-    ["/reglements", "Règlements"],
-    ["/developpeurs", "Espace développeur"],
-    ["/parametres", "Paramètres"],
-    ["/clients/cus_001", "Fiche client"],
-    ["/commercants/mrc_001", "Fiche commerçant"],
-    ["/route-inexistante", "Page introuvable"],
+    ["/collect", "Collect payments"],
+    ["/customers", "Customers"],
+    ["/merchants", "Merchants"],
+    ["/settlements", "Settlements"],
+    ["/developers", "Developer area"],
+    ["/settings", "Settings"],
+    ["/customers/cus_001", "Customer profile"],
+    ["/merchants/mrc_001", "Merchant profile"],
+    ["/unknown-route", "Page not found"],
   ];
 
-  it.each(routes)("affiche la page %s avec son titre", async (route, title) => {
+  it.each(routes)("displays the page %s with its title", async (route, title) => {
     await renderApp(route);
     expect(await H(title)).toBeInTheDocument();
-    expect(screen.queryByText(/Cette page a rencontré un problème/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/This page ran into a problem/)).not.toBeInTheDocument();
   });
 
-  it("la navigation latérale mène à chaque page principale", async () => {
+  it("the side navigation leads to every main page", async () => {
     const { user } = await renderApp("/");
-    await H("Tableau de bord");
-    const nav = screen.getByRole("navigation", { name: "Navigation principale" });
+    await H("Dashboard");
+    const nav = screen.getByRole("navigation", { name: "Main navigation" });
     for (const [label, title] of [
       ["Transactions", "Transactions"],
-      ["Encaissement", "Encaissement"],
-      ["Clients", "Clients"],
-      ["Commerçants", "Commerçants"],
-      ["Règlements", "Règlements"],
-      ["Développeurs", "Espace développeur"],
-      ["Paramètres", "Paramètres"],
-      ["Tableau de bord", "Tableau de bord"],
+      ["Collect", "Collect payments"],
+      ["Customers", "Customers"],
+      ["Merchants", "Merchants"],
+      ["Settlements", "Settlements"],
+      ["Developers", "Developer area"],
+      ["Settings", "Settings"],
+      ["Dashboard", "Dashboard"],
     ]) {
       await user.click(within(nav).getByRole("link", { name: label }));
       expect(await H(title)).toBeInTheDocument();
     }
   });
 
-  it("aucun lien interne n'est mort (pages principales et ancres)", async () => {
-    const pages = ["/", "/transactions", "/encaissement", "/clients", "/commercants", "/reglements", "/developpeurs", "/parametres"];
+  it("no internal link is dead (main pages and anchors)", async () => {
+    const pages = ["/", "/transactions", "/collect", "/customers", "/merchants", "/settlements", "/developers", "/settings"];
     const targets = new Set<string>();
-    const anchors: [string, string][] = []; // [chemin, id d'ancre]
+    const anchors: [string, string][] = []; // [path, anchor id]
     for (const page of pages) {
       const { unmount } = await renderApp(page);
       await waitFor(() => expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument());
@@ -98,264 +98,264 @@ describe("navigation et pages principales", () => {
       const { unmount } = await renderApp(href);
       await waitFor(() => expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument());
       for (const [path, id] of anchors.filter(([p]) => p === href)) {
-        expect(document.getElementById(id), `ancre #${id} manquante sur ${path}`).not.toBeNull();
+        expect(document.getElementById(id), `anchor #${id} missing on ${path}`).not.toBeNull();
       }
-      expect(screen.queryByText("Cette page n'existe pas"), `lien mort : ${href}`).not.toBeInTheDocument();
-      expect(screen.queryByText(/introuvable/i), `ressource introuvable : ${href}`).not.toBeInTheDocument();
+      expect(screen.queryByText("This page does not exist"), `dead link: ${href}`).not.toBeInTheDocument();
+      expect(screen.queryByText(/not found/i), `resource not found: ${href}`).not.toBeInTheDocument();
       unmount();
     }
   }, 60_000);
 });
 
-describe("tableau de bord", () => {
-  it("affiche les indicateurs, les alertes de démo et la bannière sandbox", async () => {
+describe("dashboard", () => {
+  it("displays the indicators, the demo alerts and the sandbox banner", async () => {
     await renderApp("/");
-    await H("Tableau de bord");
-    expect(screen.getByText("Volume des paiements")).toBeInTheDocument();
-    expect(screen.getByText("Taux de réussite")).toBeInTheDocument();
-    expect(screen.getAllByText(/Mode sandbox/).length).toBeGreaterThan(0);
-    expect(screen.getByRole("heading", { name: "Alertes" })).toBeInTheDocument();
-    expect(await screen.findByText(/en attente depuis plus de 24 h/)).toBeInTheDocument();
+    await H("Dashboard");
+    expect(screen.getByText("Payment volume")).toBeInTheDocument();
+    expect(screen.getByText("Success rate")).toBeInTheDocument();
+    expect(screen.getAllByText(/Sandbox mode/).length).toBeGreaterThan(0);
+    expect(screen.getByRole("heading", { name: "Alerts" })).toBeInTheDocument();
+    expect(await screen.findByText(/pending for more than 24 h/)).toBeInTheDocument();
   });
 
-  it("le filtre de statut recalcule le nombre de transactions affichées", async () => {
+  it("the status filter recomputes the number of displayed transactions", async () => {
     const { user } = await renderApp("/");
-    await H("Tableau de bord");
-    const kpis = within(screen.getByRole("region", { name: "Indicateurs clés" }));
+    await H("Dashboard");
+    const kpis = within(screen.getByRole("region", { name: "Key indicators" }));
     const kpiCount = () => Number(kpis.getByText("Transactions").closest(".card")!.querySelector(".num")!.textContent!.replace(/\s/g, ""));
     const before = kpiCount();
-    await user.click(screen.getByRole("button", { name: /^Échoués/ }));
-    expect(screen.getByRole("button", { name: /^Échoués/ })).toHaveAttribute("aria-pressed", "true");
+    await user.click(screen.getByRole("button", { name: /^Failed/ }));
+    expect(screen.getByRole("button", { name: /^Failed/ })).toHaveAttribute("aria-pressed", "true");
     const after = kpiCount();
     expect(after).toBeLessThan(before);
-    // le compteur de la tuile « Échoués » et l'indicateur « Transactions » doivent concorder
-    expect(after).toBe(Number(within(screen.getByRole("button", { name: /^Échoués/ })).getByText(/^\d+$/).textContent));
-    expect(screen.getByText(/Filtre actif : « Échoués »/)).toBeInTheDocument();
+    // the "Failed" tile counter and the "Transactions" indicator must match
+    expect(after).toBe(Number(within(screen.getByRole("button", { name: /^Failed/ })).getByText(/^\d+$/).textContent));
+    expect(screen.getByText(/Active filter: "Failed"/)).toBeInTheDocument();
   });
 
-  it("le sélecteur de période de l'en-tête change la période analysée", async () => {
+  it("the header period selector changes the analyzed period", async () => {
     const { user } = await renderApp("/");
-    await H("Tableau de bord");
-    await user.selectOptions(screen.getByRole("combobox", { name: "Période d'analyse" }), "all");
+    await H("Dashboard");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Analysis period" }), "all");
     await waitFor(() => expect(usePspStore.getState().period).toBe("all"));
-    expect((await screen.findAllByText(/toute la période/i)).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText(/all time/i)).length).toBeGreaterThan(0);
   });
 });
 
-describe("parcours complet : demande → page de paiement → remboursements", () => {
-  it("valide le formulaire, encaisse sur la page hébergée, puis rembourse sans dépasser le solde", async () => {
-    const { user } = await renderApp("/encaissement");
-    await H("Encaissement");
+describe("full journey: request → payment page → refunds", () => {
+  it("validates the form, collects on the hosted page, then refunds without exceeding the balance", async () => {
+    const { user } = await renderApp("/collect");
+    await H("Collect payments");
 
-    // 1. Validation : formulaire vide
-    await user.click(screen.getByRole("button", { name: "Créer la demande de paiement" }));
-    expect(await screen.findByText("Choisissez un commerçant.")).toBeInTheDocument();
-    expect(screen.getByText("Saisissez un montant.")).toBeInTheDocument();
-    expect(screen.getByText("Choisissez un client.")).toBeInTheDocument();
+    // 1. Validation: empty form
+    await user.click(screen.getByRole("button", { name: "Create the payment request" }));
+    expect(await screen.findByText("Choose a merchant.")).toBeInTheDocument();
+    expect(screen.getByText("Enter an amount.")).toBeInTheDocument();
+    expect(screen.getByText("Choose a customer.")).toBeInTheDocument();
 
-    // 2. Montant invalide puis valide
-    await user.selectOptions(screen.getByRole("combobox", { name: /Commerçant/ }), "mrc_001");
-    await user.selectOptions(screen.getByRole("combobox", { name: /^Client/ }), "cus_002");
-    const amount = screen.getByRole("textbox", { name: /Montant/ });
+    // 2. Invalid amount, then valid
+    await user.selectOptions(screen.getByRole("combobox", { name: /Merchant/ }), "mrc_001");
+    await user.selectOptions(screen.getByRole("combobox", { name: /^Customer/ }), "cus_002");
+    const amount = screen.getByRole("textbox", { name: /Amount/ });
     await user.type(amount, "-50");
-    await user.type(screen.getByRole("textbox", { name: /Description/ }), "Abonnement trimestriel");
-    await user.click(screen.getByRole("button", { name: "Créer la demande de paiement" }));
-    expect(await screen.findByText("Le montant doit être strictement positif.")).toBeInTheDocument();
+    await user.type(screen.getByRole("textbox", { name: /Description/ }), "Quarterly subscription");
+    await user.click(screen.getByRole("button", { name: "Create the payment request" }));
+    expect(await screen.findByText("The amount must be strictly positive.")).toBeInTheDocument();
     await user.clear(amount);
     await user.type(amount, "25 000");
-    await user.click(screen.getByRole("button", { name: "Créer la demande de paiement" }));
+    await user.click(screen.getByRole("button", { name: "Create the payment request" }));
 
-    // 3. Confirmation avec référence
-    expect(await screen.findByText("Demande de paiement créée")).toBeInTheDocument();
+    // 3. Confirmation with reference
+    expect(await screen.findByText("Payment request created")).toBeInTheDocument();
     const reference = document.body.textContent!.match(/PAY-[A-Z0-9]{8}/)![0];
     expect(state().transactions.find((t) => t.reference === reference)?.status).toBe("created");
 
-    // 4. Page de paiement hébergée (sandbox) : aucune saisie de carte
-    await user.click(screen.getAllByRole("link", { name: "Ouvrir la page de paiement" })[0]);
-    expect(await screen.findByText(/Choisissez une méthode de paiement \(sandbox\)/)).toBeInTheDocument();
-    expect(screen.queryByLabelText(/numéro de carte/i)).not.toBeInTheDocument();
+    // 4. Hosted payment page (sandbox): no card entry
+    await user.click(screen.getAllByRole("link", { name: "Open the payment page" })[0]);
+    expect(await screen.findByText(/Choose a payment method \(sandbox\)/)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/card number/i)).not.toBeInTheDocument();
     expect(document.querySelectorAll("input[type=text], input[type=tel], input[type=password]").length).toBe(0);
-    await user.click(screen.getByRole("button", { name: /simuler un succès/i }));
-    expect(await screen.findByText("Choisissez une méthode de paiement pour continuer.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /simulate a success/i }));
+    expect(await screen.findByText("Choose a payment method to continue.")).toBeInTheDocument();
     await user.click(screen.getByRole("radio", { name: /CIB \(sandbox\)/ }));
-    await user.click(screen.getByRole("button", { name: /simuler un succès/i }));
-    expect(await screen.findByText("Paiement simulé réussi")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /simulate a success/i }));
+    expect(await screen.findByText("Simulated payment succeeded")).toBeInTheDocument();
 
-    // 5. Retour fiche : statut, montants
-    await user.click(screen.getByRole("link", { name: /Retour au back-office/ }));
-    expect(await H("Détail de la transaction")).toBeInTheDocument();
-    expect((await screen.findAllByText("Réussi")).length).toBeGreaterThan(0);
+    // 5. Back to the detail page: status, amounts
+    await user.click(screen.getByRole("link", { name: /Back to the back office/ }));
+    expect(await H("Transaction details")).toBeInTheDocument();
+    expect((await screen.findAllByText("Succeeded")).length).toBeGreaterThan(0);
 
-    // 6. Remboursement partiel
-    await user.click(screen.getByRole("button", { name: "Rembourser" }));
-    const dialog = await screen.findByRole("dialog", { name: `Rembourser ${reference}` });
-    const refundAmount = within(dialog).getByRole("textbox", { name: /Montant à rembourser/ });
+    // 6. Partial refund
+    await user.click(screen.getByRole("button", { name: "Refund" }));
+    const dialog = await screen.findByRole("dialog", { name: `Refund ${reference}` });
+    const refundAmount = within(dialog).getByRole("textbox", { name: /Amount to refund/ });
     await user.clear(refundAmount);
     await user.type(refundAmount, "10 000");
-    await user.click(within(dialog).getByRole("button", { name: "Confirmer le remboursement" }));
-    expect(await within(dialog).findByText("Indiquez le motif du remboursement.")).toBeInTheDocument();
-    await user.selectOptions(within(dialog).getByRole("combobox", { name: /Motif/ }), "customer_request");
-    await user.click(within(dialog).getByRole("button", { name: "Confirmer le remboursement" }));
+    await user.click(within(dialog).getByRole("button", { name: "Confirm the refund" }));
+    expect(await within(dialog).findByText("Indicate the reason for the refund.")).toBeInTheDocument();
+    await user.selectOptions(within(dialog).getByRole("combobox", { name: /Reason/ }), "customer_request");
+    await user.click(within(dialog).getByRole("button", { name: "Confirm the refund" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-    expect((await screen.findAllByText("Partiellement remboursé")).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText("Partially refunded")).length).toBeGreaterThan(0);
     expect(state().transactions.find((t) => t.reference === reference)).toMatchObject({ refunded: 1_000_000, status: "partially_refunded" });
-    expect(await screen.findByText(/Remboursement RFD-[A-Z0-9]{8} de 10.000.DA enregistré/)).toBeInTheDocument();
+    expect(await screen.findByText(/Refund RFD-[A-Z0-9]{8} of 10.000.DA recorded/)).toBeInTheDocument();
 
-    // 7. Dépassement refusé
-    await user.click(screen.getByRole("button", { name: "Rembourser" }));
+    // 7. Overrun refused
+    await user.click(screen.getByRole("button", { name: "Refund" }));
     const dialog2 = await screen.findByRole("dialog");
-    const amount2 = within(dialog2).getByRole("textbox", { name: /Montant à rembourser/ });
+    const amount2 = within(dialog2).getByRole("textbox", { name: /Amount to refund/ });
     await user.clear(amount2);
     await user.type(amount2, "15 000,01");
-    await user.selectOptions(within(dialog2).getByRole("combobox", { name: /Motif/ }), "duplicate");
-    await user.click(within(dialog2).getByRole("button", { name: "Confirmer le remboursement" }));
-    expect(await within(dialog2).findByText(/Maximum remboursable : 15.000.DA/)).toBeInTheDocument();
+    await user.selectOptions(within(dialog2).getByRole("combobox", { name: /Reason/ }), "duplicate");
+    await user.click(within(dialog2).getByRole("button", { name: "Confirm the refund" }));
+    expect(await within(dialog2).findByText(/Maximum refundable amount: 15.000.DA/)).toBeInTheDocument();
     expect(state().transactions.find((t) => t.reference === reference)!.refunded).toBe(1_000_000);
 
-    // 8. Remboursement total du solde
-    await user.click(within(dialog2).getByRole("button", { name: "Tout rembourser" }));
-    await user.click(within(dialog2).getByRole("button", { name: "Confirmer le remboursement" }));
+    // 8. Full refund of the balance
+    await user.click(within(dialog2).getByRole("button", { name: "Refund everything" }));
+    await user.click(within(dialog2).getByRole("button", { name: "Confirm the refund" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(state().transactions.find((t) => t.reference === reference)).toMatchObject({ refunded: 2_500_000, status: "refunded" });
-    expect(screen.queryByRole("button", { name: "Rembourser" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Refund" })).not.toBeInTheDocument();
     expect(state().refunds.filter((r) => r.transactionId === state().transactions.find((t) => t.reference === reference)!.id)).toHaveLength(2);
   }, 60_000);
 
-  it("un double clic sur « Simuler un succès » n'enregistre qu'un seul changement de statut", async () => {
+  it("a double click on \"Simulate a success\" records only one status change", async () => {
     const tx = await createTx();
     const { user } = await renderApp(`/transactions/${tx.id}`);
-    await H("Détail de la transaction");
-    await user.dblClick(await screen.findByRole("button", { name: "Simuler un succès" }));
+    await H("Transaction details");
+    await user.dblClick(await screen.findByRole("button", { name: "Simulate a success" }));
     await waitFor(() => expect(state().transactions.find((t) => t.id === tx.id)!.status).toBe("succeeded"));
     const stored = state().transactions.find((t) => t.id === tx.id)!;
     expect(stored.history.filter((h) => h.to === "succeeded")).toHaveLength(1);
     expect(state().auditLogs.filter((a) => a.entityId === tx.id && a.action === "payment.status_changed")).toHaveLength(1);
   });
 
-  it("un lien de paiement invalide affiche un message clair", async () => {
-    await renderApp("/pay/inconnu");
-    expect(await screen.findByText("Lien de paiement introuvable")).toBeInTheDocument();
+  it("an invalid payment link shows a clear message", async () => {
+    await renderApp("/pay/unknown");
+    expect(await screen.findByText("Payment link not found")).toBeInTheDocument();
   });
 
-  it("la page de paiement refuse proprement un paiement déjà clôturé", async () => {
+  it("the payment page cleanly refuses an already closed payment", async () => {
     const tx = await createTx({ outcome: "failed", method: "cib_sandbox" });
     await renderApp(`/pay/${tx.checkoutToken}`);
-    expect(await screen.findByText("Paiement refusé (simulation)")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /simuler un succès/i })).not.toBeInTheDocument();
+    expect(await screen.findByText("Payment declined (simulation)")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /simulate a success/i })).not.toBeInTheDocument();
   });
 });
 
-describe("accessibilité clavier", () => {
-  it("une boîte de dialogue prend le focus, le garde (Tab / Maj+Tab), se ferme avec Échap et le rend au déclencheur", async () => {
+describe("keyboard accessibility", () => {
+  it("a dialog takes focus, keeps it (Tab / Shift+Tab), closes with Escape and returns it to the trigger", async () => {
     const tx = await createTx({ outcome: "succeeded", method: "cib_sandbox" });
     const { user } = await renderApp(`/transactions/${tx.id}`);
-    const trigger = await screen.findByRole("button", { name: "Rembourser" });
+    const trigger = await screen.findByRole("button", { name: "Refund" });
     await user.click(trigger);
     const dialog = await screen.findByRole("dialog");
     expect(dialog).toHaveAttribute("aria-modal", "true");
     expect(dialog.contains(document.activeElement)).toBe(true);
     for (let i = 0; i < 12; i++) {
       await user.tab();
-      expect(dialog.contains(document.activeElement), `Tab n°${i + 1} sort de la boîte de dialogue`).toBe(true);
+      expect(dialog.contains(document.activeElement), `Tab #${i + 1} leaves the dialog`).toBe(true);
     }
     for (let i = 0; i < 12; i++) {
       await user.tab({ shift: true });
-      expect(dialog.contains(document.activeElement), `Maj+Tab n°${i + 1} sort de la boîte de dialogue`).toBe(true);
+      expect(dialog.contains(document.activeElement), `Shift+Tab #${i + 1} leaves the dialog`).toBe(true);
     }
     await user.keyboard("{Escape}");
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(trigger).toHaveFocus();
   });
 
-  it("le lien d'évitement mène au contenu et les tableaux ont une légende et des en-têtes de colonnes", async () => {
+  it("the skip link leads to the content and the tables have a caption and column headers", async () => {
     await renderApp("/transactions");
     await H("Transactions");
-    expect(screen.getByRole("link", { name: "Aller au contenu principal" })).toHaveAttribute("href", "#contenu");
-    expect(document.getElementById("contenu")).toBeInTheDocument();
-    const table = await screen.findByRole("table", { name: /Liste des transactions/ });
+    expect(screen.getByRole("link", { name: "Skip to main content" })).toHaveAttribute("href", "#content");
+    expect(document.getElementById("content")).toBeInTheDocument();
+    const table = await screen.findByRole("table", { name: /Transaction list/ });
     expect(within(table).getAllByRole("columnheader").length).toBeGreaterThanOrEqual(6);
   });
 
-  it("annonce les réussites dans une zone live (role=status)", async () => {
+  it("announces successes in a live region (role=status)", async () => {
     const tx = await createTx();
     const { user } = await renderApp(`/transactions/${tx.id}`);
-    await user.click(await screen.findByRole("button", { name: "Simuler un succès" }));
+    await user.click(await screen.findByRole("button", { name: "Simulate a success" }));
     const live = screen.getAllByRole("status").find((el) => el.getAttribute("aria-live") === "polite")!;
     await waitFor(() => expect(live).toHaveTextContent(tx.reference));
-    expect(live).toHaveTextContent(/Réussi/);
+    expect(live).toHaveTextContent(/Succeeded/);
   });
 });
 
-describe("liste des transactions : recherche, filtres, tri, export", () => {
-  it("recherche par référence, filtre par statut et réinitialisation", async () => {
+describe("transaction list: search, filters, sorting, export", () => {
+  it("searches by reference, filters by status and resets", async () => {
     const tx = await createTx({ outcome: "succeeded", method: "wallet_sandbox" });
     const { user } = await renderApp("/transactions");
     await H("Transactions");
-    await user.type(screen.getByRole("searchbox", { name: "Rechercher une transaction" }), tx.reference);
-    const table = await screen.findByRole("table", { name: /Liste des transactions/ });
-    await waitFor(() => expect(within(table).getAllByRole("row")).toHaveLength(2)); // en-tête + 1 résultat
+    await user.type(screen.getByRole("searchbox", { name: "Search for a transaction" }), tx.reference);
+    const table = await screen.findByRole("table", { name: /Transaction list/ });
+    await waitFor(() => expect(within(table).getAllByRole("row")).toHaveLength(2)); // header + 1 result
     expect(within(table).getByRole("link", { name: tx.reference })).toBeInTheDocument();
 
     await user.clear(screen.getByRole("searchbox"));
-    await user.click(screen.getByRole("button", { name: /Filtres/ }));
-    await user.click(screen.getByRole("button", { name: "Échoué" }));
+    await user.click(screen.getByRole("button", { name: /Filters/ }));
+    await user.click(screen.getByRole("button", { name: "Failed" }));
     await waitFor(() => {
       const rows = within(screen.getByRole("table")).getAllByRole("row").slice(1);
       expect(rows.length).toBeGreaterThan(0);
-      for (const r of rows) expect(within(r).getByText("Échoué")).toBeInTheDocument();
+      for (const r of rows) expect(within(r).getByText("Failed")).toBeInTheDocument();
     });
-    await user.click(screen.getByRole("button", { name: "Réinitialiser" }));
-    await waitFor(() => expect(screen.queryByRole("button", { name: "Réinitialiser" })).not.toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: "Reset" }));
+    await waitFor(() => expect(screen.queryByRole("button", { name: "Reset" })).not.toBeInTheDocument());
   });
 
-  it("non-régression : un filtre cliqué pendant la frappe n'est pas écrasé par l'anti-rebond de la recherche", async () => {
+  it("regression: a filter clicked while typing is not overwritten by the search debounce", async () => {
     const { user } = await renderApp("/transactions");
     await H("Transactions");
     usePspStore.getState().setPeriod("all");
-    await user.click(screen.getByRole("button", { name: /Filtres/ }));
-    await user.type(screen.getByRole("searchbox"), "CMD-1"); // l'anti-rebond (250 ms) n'a pas encore abouti
-    await user.click(screen.getByRole("button", { name: "Échoué" })); // clic immédiat sur un filtre
-    await new Promise((r) => setTimeout(r, 500)); // laisse l'anti-rebond s'exécuter
-    expect(screen.getByRole("button", { name: "Échoué" })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByRole("searchbox")).toHaveValue("CMD-1");
+    await user.click(screen.getByRole("button", { name: /Filters/ }));
+    await user.type(screen.getByRole("searchbox"), "ORD-1"); // the debounce (250 ms) has not completed yet
+    await user.click(screen.getByRole("button", { name: "Failed" })); // immediate click on a filter
+    await new Promise((r) => setTimeout(r, 500)); // let the debounce run
+    expect(screen.getByRole("button", { name: "Failed" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("searchbox")).toHaveValue("ORD-1");
     const rows = within(await screen.findByRole("table")).getAllByRole("row").slice(1);
     expect(rows.length).toBeGreaterThan(0);
     for (const r of rows) {
-      expect(within(r).getByText("Échoué")).toBeInTheDocument();
-      expect(r.textContent).toMatch(/CMD-1/);
+      expect(within(r).getByText("Failed")).toBeInTheDocument();
+      expect(r.textContent).toMatch(/ORD-1/);
     }
   });
 
-  it("affiche un état vide explicite quand rien ne correspond", async () => {
+  it("displays an explicit empty state when nothing matches", async () => {
     const { user } = await renderApp("/transactions");
     await H("Transactions");
-    await user.type(screen.getByRole("searchbox"), "zzzz-introuvable");
-    expect(await screen.findByText("Aucune transaction ne correspond")).toBeInTheDocument();
+    await user.type(screen.getByRole("searchbox"), "zzzz-not-found");
+    expect(await screen.findByText("No transaction matches")).toBeInTheDocument();
   });
 
-  it("trie par montant (aria-sort) et pagine", async () => {
+  it("sorts by amount (aria-sort) and paginates", async () => {
     const { user } = await renderApp("/transactions?period=all");
     await H("Transactions");
     usePspStore.getState().setPeriod("all");
-    await user.click(await screen.findByRole("button", { name: /Trier par montant/ }));
-    await waitFor(() => expect(screen.getByRole("columnheader", { name: /Montant/ })).toHaveAttribute("aria-sort", "descending"));
+    await user.click(await screen.findByRole("button", { name: /Sort by amount/ }));
+    await waitFor(() => expect(screen.getByRole("columnheader", { name: /Amount/ })).toHaveAttribute("aria-sort", "descending"));
     const amounts = within(screen.getByRole("table")).getAllByRole("row").slice(1).map((r) => within(r).getAllByRole("cell")[5].textContent!);
     expect(amounts.length).toBeGreaterThan(1);
-    await user.click(screen.getByRole("button", { name: "Page suivante" }));
+    await user.click(screen.getByRole("button", { name: "Next page" }));
     expect(await screen.findByText(/Page 2 \//)).toBeInTheDocument();
   });
 
-  it("exporte les transactions filtrées en CSV et journalise l'export", async () => {
+  it("exports the filtered transactions to CSV and logs the export", async () => {
     let exported: Blob | null = null;
     const spy = vi.spyOn(URL, "createObjectURL").mockImplementation((b) => {
       exported = b as Blob;
       return "blob:test";
     });
-    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined); // évite la navigation jsdom
+    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined); // avoids jsdom navigation
     const { user } = await renderApp("/transactions?status=failed");
     await H("Transactions");
     usePspStore.getState().setPeriod("all");
-    await user.click(await screen.findByRole("button", { name: "Exporter en CSV" }));
+    await user.click(await screen.findByRole("button", { name: "Export to CSV" }));
     await waitFor(() => expect(spy).toHaveBeenCalled());
     const text = await new Promise<string>((resolve) => {
       const reader = new FileReader();
@@ -363,101 +363,101 @@ describe("liste des transactions : recherche, filtres, tri, export", () => {
       reader.readAsText(exported!);
     });
     const lines = text.replace("﻿", "").trim().split("\r\n");
-    expect(lines[0]).toContain("reference;date_creation");
+    expect(lines[0]).toContain("reference;created_at");
     expect(lines.length - 1).toBe(state().transactions.filter((t) => t.status === "failed").length);
-    expect(lines.slice(1).every((l) => l.includes(";Échoué;"))).toBe(true);
+    expect(lines.slice(1).every((l) => l.includes(";Failed;"))).toBe(true);
     await waitFor(() => expect(state().auditLogs[0].action).toBe("export.csv"));
     expect(click).toHaveBeenCalled();
     click.mockRestore();
     spy.mockRestore();
   });
 
-  it("crée une transaction de test avec résultat simulé depuis la liste", async () => {
+  it("creates a test transaction with a simulated outcome from the list", async () => {
     const { user } = await renderApp("/transactions");
     await H("Transactions");
-    await user.click(screen.getByRole("button", { name: "Transaction de test" }));
-    const dialog = await screen.findByRole("dialog", { name: "Nouvelle transaction de test" });
-    await user.selectOptions(within(dialog).getByRole("combobox", { name: /Commerçant/ }), "mrc_002");
-    await user.selectOptions(within(dialog).getByRole("combobox", { name: /^Client/ }), "cus_003");
-    await user.type(within(dialog).getByRole("textbox", { name: /Montant/ }), "8 500");
-    await user.type(within(dialog).getByRole("textbox", { name: /Description/ }), "Test de refus");
-    await user.selectOptions(within(dialog).getByRole("combobox", { name: /Résultat à appliquer/ }), "failed");
-    await user.click(within(dialog).getByRole("button", { name: "Créer la transaction de test" }));
-    expect(await H("Détail de la transaction")).toBeInTheDocument();
-    expect((await screen.findAllByText("Échoué")).length).toBeGreaterThan(0);
+    await user.click(screen.getByRole("button", { name: "Test transaction" }));
+    const dialog = await screen.findByRole("dialog", { name: "New test transaction" });
+    await user.selectOptions(within(dialog).getByRole("combobox", { name: /Merchant/ }), "mrc_002");
+    await user.selectOptions(within(dialog).getByRole("combobox", { name: /^Customer/ }), "cus_003");
+    await user.type(within(dialog).getByRole("textbox", { name: /Amount/ }), "8 500");
+    await user.type(within(dialog).getByRole("textbox", { name: /Description/ }), "Decline test");
+    await user.selectOptions(within(dialog).getByRole("combobox", { name: /Outcome to apply/ }), "failed");
+    await user.click(within(dialog).getByRole("button", { name: "Create the test transaction" }));
+    expect(await H("Transaction details")).toBeInTheDocument();
+    expect((await screen.findAllByText("Failed")).length).toBeGreaterThan(0);
     expect(state().transactions.some((t) => t.origin === "test" && t.status === "failed" && t.amount === 850_000)).toBe(true);
   });
 });
 
-describe("règlements, rôles et paramètres", () => {
-  it("génère des lots simulés en gardant le grand livre cohérent", async () => {
-    const { user } = await renderApp("/reglements");
-    await H("Règlements");
-    expect(screen.getByText(/aucun transfert bancaire réel/i)).toBeInTheDocument();
+describe("settlements, roles and settings", () => {
+  it("generates simulated batches while keeping the ledger consistent", async () => {
+    const { user } = await renderApp("/settlements");
+    await H("Settlements");
+    expect(screen.getByText(/no real bank transfer/i)).toBeInTheDocument();
     const before = state().settlements.length;
-    await user.click(await screen.findByRole("button", { name: /Générer les lots/ }));
-    await user.click(await screen.findByRole("button", { name: "Générer (simulation)" }));
+    await user.click(await screen.findByRole("button", { name: /Generate batches/ }));
+    await user.click(await screen.findByRole("button", { name: "Generate (simulation)" }));
     await waitFor(() => expect(state().settlements.length).toBeGreaterThan(before));
     const l = computeLedger(state().transactions, state().refunds, state().settlements);
     expect(l.settled + l.inFlight + l.unbatched).toBe(l.net);
-    expect(await screen.findByText(/lots? de règlement généré/)).toBeInTheDocument();
+    expect(await screen.findByText(/batch(es)? generated/)).toBeInTheDocument();
   });
 
-  it("le rôle Opérateur n'a pas accès aux actions de règlement ni à la réinitialisation", async () => {
-    const { user } = await renderApp("/reglements");
-    await H("Règlements");
-    await user.click(screen.getByRole("button", { name: /Profil : Amine Démo/ }));
-    await user.click(screen.getByRole("button", { name: "Opérateur" }));
+  it("the Operator role has no access to settlement actions or to the reset", async () => {
+    const { user } = await renderApp("/settlements");
+    await H("Settlements");
+    await user.click(screen.getByRole("button", { name: /Profile: Amine Demo/ }));
+    await user.click(screen.getByRole("button", { name: "Operator" }));
     await waitFor(() => expect(state().settings.currentRole).toBe("operator"));
-    expect(screen.queryByRole("button", { name: /Générer les lots/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Generate batches/ })).not.toBeInTheDocument();
     expect(state().auditLogs[0].action).toBe("role.switched");
   });
 
-  it("modifie le profil de l'organisation avec validation, puis journalise", async () => {
-    const { user } = await renderApp("/parametres");
-    await H("Paramètres");
-    const name = screen.getByRole("textbox", { name: /Nom commercial/ });
+  it("edits the organization profile with validation, then logs the change", async () => {
+    const { user } = await renderApp("/settings");
+    await H("Settings");
+    const name = screen.getByRole("textbox", { name: /Business name/ });
     await user.clear(name);
-    await user.type(name, "Atlas Paiements Démo");
-    const email = screen.getByRole("textbox", { name: /E-mail de contact/ });
+    await user.type(name, "Atlas Payments Demo");
+    const email = screen.getByRole("textbox", { name: /Contact email/ });
     await user.clear(email);
-    await user.type(email, "pas-un-email");
-    await user.click(screen.getByRole("button", { name: "Enregistrer" }));
-    expect(await screen.findByText("Adresse e-mail invalide.")).toBeInTheDocument();
+    await user.type(email, "not-an-email");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(await screen.findByText("Invalid email address.")).toBeInTheDocument();
     await user.clear(email);
     await user.type(email, "contact@atlas.example");
-    await user.click(screen.getByRole("button", { name: "Enregistrer" }));
-    await waitFor(() => expect(state().settings.organization.name).toBe("Atlas Paiements Démo"));
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(state().settings.organization.name).toBe("Atlas Payments Demo"));
     expect(state().auditLogs[0].action).toBe("settings.updated");
   });
 
-  it("réinitialise la démo après confirmation et restaure le jeu d'origine", async () => {
+  it("resets the demo after confirmation and restores the original dataset", async () => {
     const tx = await createTx();
-    const { user } = await renderApp("/parametres?tab=demo");
-    await H("Paramètres");
+    const { user } = await renderApp("/settings?tab=demo");
+    await H("Settings");
     expect(state().transactions.some((t) => t.id === tx.id)).toBe(true);
-    await user.click(screen.getByRole("button", { name: "Réinitialiser la démonstration" }));
-    await user.click(await screen.findByRole("button", { name: "Oui, réinitialiser" }));
+    await user.click(screen.getByRole("button", { name: "Reset the demo" }));
+    await user.click(await screen.findByRole("button", { name: "Yes, reset" }));
     await waitFor(() => expect(state().transactions.some((t) => t.id === tx.id)).toBe(false));
     expect(state().transactions.length).toBeGreaterThan(200);
     expect(state().auditLogs.some((a) => a.action === "demo.reset")).toBe(true);
   });
 
-  it("affiche le journal d'audit et le filtre par type d'action", async () => {
+  it("displays the audit log and filters it by action type", async () => {
     await createTx();
-    const { user } = await renderApp("/parametres?tab=audit");
-    await H("Paramètres");
-    await user.selectOptions(screen.getByRole("combobox", { name: "Type d'action" }), "payment.created");
-    const table = await screen.findByRole("table", { name: "Journal d'audit" });
+    const { user } = await renderApp("/settings?tab=audit");
+    await H("Settings");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Action type" }), "payment.created");
+    const table = await screen.findByRole("table", { name: "Audit log" });
     const rows = within(table).getAllByRole("row").slice(1);
     expect(rows.length).toBeGreaterThan(0);
-    for (const r of rows) expect(within(r).getByText("Paiement créé")).toBeInTheDocument();
+    for (const r of rows) expect(within(r).getByText("Payment created")).toBeInTheDocument();
   });
 });
 
-describe("persistance après actualisation", () => {
-  it("retrouve une transaction créée après un rechargement (état mémoire perdu, IndexedDB conservé)", async () => {
-    const tx = await createTx({ orderRef: "CMD-PERSIST" });
+describe("persistence after refresh", () => {
+  it("finds a created transaction after a reload (in-memory state lost, IndexedDB kept)", async () => {
+    const tx = await createTx({ orderRef: "ORD-PERSIST" });
     const first = await renderApp("/transactions");
     await H("Transactions");
     first.unmount();
@@ -465,15 +465,15 @@ describe("persistance après actualisation", () => {
 
     const { user } = await renderApp("/transactions");
     await H("Transactions");
-    await user.type(screen.getByRole("searchbox"), "CMD-PERSIST");
+    await user.type(screen.getByRole("searchbox"), "ORD-PERSIST");
     expect(await screen.findByRole("link", { name: tx.reference })).toBeInTheDocument();
   });
 
-  it("affiche une erreur claire avec relance si le stockage est inaccessible", async () => {
-    const spy = vi.spyOn(LocalPspApi.prototype, "init").mockRejectedValueOnce(new Error("IndexedDB bloqué"));
+  it("shows a clear error with a retry button if the storage is unavailable", async () => {
+    const spy = vi.spyOn(LocalPspApi.prototype, "init").mockRejectedValueOnce(new Error("IndexedDB blocked"));
     await renderApp("/");
-    expect(await screen.findByText("Le stockage local est inaccessible")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Réessayer" })).toBeInTheDocument();
+    expect(await screen.findByText("Local storage is unavailable")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
     spy.mockRestore();
   });
 });

@@ -1,120 +1,125 @@
-# PSP Sandbox — MVP de plateforme de paiement (Algérie)
+# PSP Sandbox — Payment platform MVP (Algeria)
 
-MVP fonctionnel d'un **PSP (Payment Service Provider)** pour le marché algérien, construit à partir du projet de gestion d'argent « Gestion d'argent » (dossier source préservé, non modifié).
+Working MVP of a **PSP (Payment Service Provider)** for the Algerian market, built from the author's personal-finance project "Gestion d'argent" (French for "money management"). The source folder was preserved and left unmodified.
 
-> ## ⚠ Ce que ce projet est — et n'est pas
-> - **Sandbox de démonstration** : toutes les transactions, clients, commerçants, règlements et clés d'API sont **fictifs** et générés localement.
-> - **Aucun paiement réel** n'est traité, aucun prestataire / acquéreur / banque n'est connecté, aucune API réseau n'existe.
-> - **Aucun agrément, aucune certification, aucune conformité réglementaire** ne sont revendiqués. Ne l'utilisez pas pour encaisser de l'argent.
-> - Les contrôles côté navigateur et le stockage local (IndexedDB) **ne constituent pas une sécurité serveur**.
+> ## ⚠ What this project is — and is not
+> - **Demonstration sandbox**: all transactions, customers, merchants, settlements and API keys are **fictitious** and generated locally.
+> - **No real payment** is processed, no provider / acquirer / bank is connected, and no network API exists.
+> - **No license, no certification and no regulatory compliance** is claimed. Do not use it to collect money.
+> - Browser-side checks and local storage (IndexedDB) **are not server-side security**.
 
-## Fonctionnalités
+## Features
 
-| Module | Contenu |
+| Module | Content |
 |---|---|
-| **Tableau de bord** | Volume, nombre de transactions, taux de réussite, remboursements, variation vs période précédente ; tuiles *Réussis / En attente / Échoués / Annulés / Remboursés* qui servent de filtre de statut ; graphique d'activité (jour / semaine / mois, vue graphique ou tableau) ; répartition par méthode ; dernières transactions ; alertes calculées ; actions rapides ; période sélectionnable dans l'en-tête. |
-| **Transactions** | Liste filtrable (recherche tolérante aux accents, statut multi, méthode, commerçant, client, montants), tri, pagination, filtres **dans l'URL** (liens partageables), fiche détaillée (montants, commission, historique des statuts, remboursements, lot de règlement), **export CSV** des résultats filtrés, création de **transactions de test** avec résultat simulé. |
-| **Encaissement** | Création d'une demande de paiement (montant, devise DZD, référence de commande, description, client minimal), lien de **page de paiement hébergée sandbox** (`/pay/:token`), liste « À encaisser ». |
-| **Page de paiement hébergée** | Méthodes **fictives** (CIB, Edahabia, portefeuille, virement — toutes marquées *sandbox*), simulation de succès / refus (avec motif) / attente / annulation. **Aucun champ de carte.** |
-| **Remboursements** | Partiels ou totaux, motif obligatoire, historique, solde remboursable, plafond de l'opérateur, prévention des dépassements, commission restituée au prorata. |
-| **Clients** | Liste, recherche, filtres (ville, segment), tri, fiche avec indicateurs et historique. |
-| **Commerçants** | Liste, filtres, fiche (informations, grand livre, lots, historique) ; statuts *Actif / En revue / Suspendu* qui bloquent encaissements et règlements. |
-| **Règlements (simulés)** | Synthèse encaissé / remboursé / commissions / net, répartition réglé / en cours / à régler (avec contrôle de cohérence affiché), génération de lots, marquage « réglé » ou « échoué » (les montants sont alors libérés), historique. **Aucun virement réel.** |
-| **Espace développeur** | Spécification REST **illustrative**, exemples de requêtes/réponses, idempotence, cycle de vie des statuts, **webhooks signés** (HMAC-SHA256, exemple de vérification serveur), erreurs, prérequis de production. Clés **fictives**. |
-| **Paramètres** | Profil de l'organisation (validé), préférences d'affichage, **rôles Administrateur / Opérateur** avec matrice de droits, **journal d'audit**, réinitialisation de la démo. |
+| **Dashboard** | Volume, number of transactions, success rate, refunds, change vs the previous period; *Succeeded / Pending / Failed / Cancelled / Refunded* tiles that act as a status filter; activity chart (day / week / month, chart or table view); breakdown by method; latest transactions; computed alerts; quick actions; period selectable in the header. |
+| **Transactions** | Filterable list (accent-insensitive search, multi-status, method, merchant, customer, amounts), sorting, pagination, filters **stored in the URL** (shareable links), detail page (amounts, fee, status history, refunds, settlement batch), **CSV export** of the filtered results, creation of **test transactions** with a simulated outcome. |
+| **Collect** | Creation of a payment request (amount, DZD currency, order reference, description, minimal customer), link to the **sandbox hosted payment page** (`/pay/:token`), "To collect" list. |
+| **Hosted payment page** | **Fictitious** methods (CIB, Edahabia, wallet, bank transfer — all marked *sandbox*), simulation of success / decline (with reason) / pending / cancellation. **No card field.** |
+| **Refunds** | Partial or full, mandatory reason, history, refundable balance, operator cap, overrun prevention, fee reversed pro rata. |
+| **Customers** | List, search, filters (city, segment), sorting, profile with indicators and history. |
+| **Merchants** | List, filters, profile (information, ledger, batches, history); *Active / Under review / Suspended* statuses that block collections and settlements. |
+| **Settlements (simulated)** | Collected / refunded / fees / net summary, settled / in progress / to settle breakdown (with the consistency check displayed), batch generation, marking as "settled" or "failed" (the amounts are then released), history. **No real bank transfer.** |
+| **Developer area** | **Illustrative** REST specification, request/response examples, idempotency, status lifecycle, **signed webhooks** (HMAC-SHA256, server-side verification example), errors, production prerequisites. **Fictitious** keys. |
+| **Settings** | Organization profile (validated), display preferences, **Administrator / Operator roles** with a permissions matrix, **audit log**, demo reset. |
 
-## Démarrage
+## Getting started
 
-Prérequis : **Node.js ≥ 18** (testé avec Node 23) et npm.
-
-```bash
-npm install        # installe les dépendances
-npm run dev        # lance l'application (http://localhost:5173)
-```
-
-Autres commandes :
+Requirements: **Node.js ≥ 18** (tested with Node 23) and npm.
 
 ```bash
-npm test           # tests unitaires, de parcours et d'accessibilité (Vitest) — 235 tests, ~1 min
-npm run typecheck  # contrôle TypeScript (tsc --noEmit)
-npm run build      # typecheck + build de production dans dist/
-npm run preview    # sert le build de production
+npm install        # install the dependencies
+npm run dev        # start the application (http://localhost:5173)
 ```
 
-Les données de démonstration sont créées automatiquement au premier lancement et **persistent après actualisation** (IndexedDB, base `psp-sandbox`). **Paramètres → Données de démo → Réinitialiser** restaure le jeu d'origine (administrateur uniquement). Pour changer de rôle : menu profil (en haut à droite).
+Other commands:
+
+```bash
+npm test           # unit, user-journey and accessibility tests (Vitest) — 235 tests, ~1.5 min
+npm run typecheck  # TypeScript check (tsc --noEmit)
+npm run build      # typecheck + production build into dist/
+npm run preview    # serve the production build
+```
+
+The demo data is created automatically on first launch and **persists across page reloads** (IndexedDB, `psp-sandbox` database). **Settings → Demo data → Reset the demo** restores the original dataset (administrator only). To switch role: profile menu (top right).
+
+The user interface and the documentation are in English. Amounts, numbers and numeric dates keep the Algerian/French display conventions (`12 500,00 DA`, `19/10/2026`, Algiers time UTC+1), and CSV exports use the `;` separator with a decimal comma.
 
 ## Architecture
 
 ```
 src/
-  domain/      Logique métier PURE (aucune dépendance UI/stockage), entièrement testée
-    money.ts        montants en centimes entiers, parsing/format DA, limites, commissions
-    status.ts       statuts, transitions autorisées, libellés, applyTransition()
-    refunds.ts      planRefund() : validation et calcul (partiel/total, commission restituée)
-    settlement.ts   lots, résolution, computeLedger() (grand livre cohérent)
-    aggregates.ts   summarize() (KPI), buildSeries() (graphique), volumeByMethod()
-    filters.ts      recherche, filtres, tri, pagination, codec d'URL, stats clients/commerçants
-    period.ts       périodes et dates (heure d'Alger UTC+1), formats français
-    validation.ts   schémas Zod, détection de numéros de carte (Luhn), formulaires
-    permissions.ts  rôles et droits (démonstration)
+  domain/      PURE business logic (no UI/storage dependency), fully tested
+    money.ts        amounts in integer centimes, DA parsing/formatting, limits, fees
+    status.ts       statuses, allowed transitions, labels, applyTransition()
+    refunds.ts      planRefund(): validation and computation (partial/full, fee reversed)
+    settlement.ts   batches, resolution, computeLedger() (consistent ledger)
+    aggregates.ts   summarize() (KPIs), buildSeries() (chart), volumeByMethod()
+    filters.ts      search, filters, sorting, pagination, URL codec, customer/merchant stats
+    period.ts       periods and dates (Algiers time, UTC+1), dd/mm/yyyy formats
+    validation.ts   Zod schemas, card-number detection (Luhn), forms
+    permissions.ts  roles and permissions (demonstration)
     alerts.ts csv.ts webhook.ts ids.ts errors.ts types.ts
-  data/        Jeu de démonstration reproductible (seed.ts) et spécification d'API (apiSpec.ts)
-  db/          Schéma Dexie / IndexedDB
-  services/    api.ts = CONTRAT PspApi ; localApi.ts = implémentation locale (IndexedDB)
-  store/       Zustand : état de l'application, toasts, mutations (appellent PspApi puis rechargent)
-  hooks/       useAction (verrou anti double-clic), useIntentKey (idempotence), sélecteurs
+  data/        Reproducible demo dataset (seed.ts) and API specification (apiSpec.ts)
+  db/          Dexie / IndexedDB schema
+  services/    api.ts = the PspApi CONTRACT; localApi.ts = local implementation (IndexedDB)
+  store/       Zustand: application state, toasts, mutations (call PspApi, then reload)
+  hooks/       useAction (double-click lock), useIntentKey (idempotency), selectors
   components/  ui/ (design system), layout/, charts/, payments/, transactions/
-  pages/       Une page par route
-  test/        Fabriques, rendu de l'app, tests de parcours (jsdom + fake-indexeddb)
-docs/          API.md, PRODUCTION-CHECKLIST.md, AUDIT.md
+  pages/       One page per route
+  test/        Factories, app rendering, user-journey tests (jsdom + fake-indexeddb)
+docs/          API.md, PRODUCTION-CHECKLIST.md, AUDIT.md, TASKS.md
 ```
 
-Principes :
+Routes: `/` (dashboard), `/transactions`, `/transactions/:id`, `/collect`, `/pay/:token` (hosted payment page), `/customers`, `/customers/:id`, `/merchants`, `/merchants/:id`, `/settlements`, `/developers`, `/settings`.
 
-- **Séparation stricte** : l'interface ne contient aucun calcul métier. Statuts, montants, remboursements, agrégats et filtres vivent dans `domain/` et sont testés isolément.
-- **Montants en centimes entiers** : jamais de flottants stockés ; limites explicites (50 DA à 5 000 000 DA par paiement en sandbox, plafond de remboursement de l'opérateur : 50 000 DA).
-- **Statuts** : `created → pending → succeeded | failed | cancelled`, `created → succeeded | failed | cancelled`, `succeeded → partially_refunded → refunded`. Les statuts remboursés ne s'obtiennent que par un remboursement.
-- **Idempotence à trois niveaux** : (1) verrou synchrone dans `useAction` (le 2ᵉ clic est ignoré), (2) clé d'idempotence par intention (`useIntentKey`) enregistrée dans une table dédiée au sein de la même transaction IndexedDB, (3) garde de la machine d'états (rejouer « réussi » sur un paiement déjà réussi n'écrit rien).
-- **Atomicité** : chaque mutation (transaction, remboursement, lot, entrée d'audit) s'exécute dans **une** transaction IndexedDB.
-- **Prêt pour un vrai backend** : l'interface ne dépend que du contrat `PspApi` (`services/api.ts`). Un futur `HttpPspApi` (voir `docs/API.md`) peut remplacer `LocalPspApi` sans toucher aux pages ; la logique de `domain/` pourra être réutilisée côté serveur.
+Principles:
 
-### Définitions des indicateurs (uniques dans tout le produit)
+- **Strict separation**: the interface contains no business computation. Statuses, amounts, refunds, aggregates and filters live in `domain/` and are tested in isolation.
+- **Amounts in integer centimes**: floats are never stored; explicit limits (50 DA to 5,000,000 DA per payment in the sandbox, operator refund cap: 50,000 DA).
+- **Statuses**: `created → pending → succeeded | failed | cancelled`, `created → succeeded | failed | cancelled`, `succeeded → partially_refunded → refunded`. The refunded statuses can only be reached through a refund.
+- **Three-level idempotency**: (1) synchronous lock in `useAction` (the 2nd click is ignored), (2) one idempotency key per intent (`useIntentKey`) recorded in a dedicated table within the same IndexedDB transaction, (3) state-machine guard (replaying "succeeded" on an already successful payment writes nothing).
+- **Atomicity**: each mutation (transaction, refund, batch, audit entry) runs in **one** IndexedDB transaction.
+- **Ready for a real backend**: the interface only depends on the `PspApi` contract (`services/api.ts`). A future `HttpPspApi` (see `docs/API.md`) can replace `LocalPspApi` without touching the pages; the `domain/` logic can be reused server-side.
 
-- *Encaissée* : transaction réussie, partiellement remboursée ou remboursée.
-- *Volume* : somme des montants des transactions encaissées (brut). *Net* = volume − remboursements.
-- *Taux de réussite* : encaissées / (encaissées + échouées) ; les transactions ouvertes ou annulées sont exclues.
-- *Période* : appliquée à la date de création de la transaction (jours civils en heure d'Alger, UTC+1 sans heure d'été) ; variations calculées contre la période précédente de même durée.
-- *Règlement* : net = encaissé − remboursé − commissions (restituées au prorata des remboursements). Invariant vérifié : `réglé + en cours + à régler = net`. Un remboursement postérieur au lot de son paiement devient un ajustement négatif dans le lot suivant.
+### Indicator definitions (single definitions across the whole product)
 
-## Tests et vérifications
+- *Collected*: a succeeded, partially refunded or refunded transaction.
+- *Volume*: sum of the amounts of collected transactions (gross). *Net* = volume − refunds.
+- *Success rate*: collected / (collected + failed); open or cancelled transactions are excluded.
+- *Period*: applied to the transaction creation date (calendar days in Algiers time, UTC+1 without daylight saving); changes are computed against the previous period of the same length.
+- *Settlement*: net = collected − refunded − fees (fees are reversed pro rata with refunds). Verified invariant: `settled + in progress + to settle = net`. A refund made after its payment's batch becomes a negative adjustment in the next batch.
 
-235 tests Vitest : logique de domaine, jeu de données, service IndexedDB (idempotence, permissions, atomicité, persistance), **parcours de l'interface** (jsdom) — création de demande → page de paiement hébergée → remboursement partiel puis total, double clic, validation de formulaires, filtres/tri/pagination, export CSV, rôles, réinitialisation, persistance après rechargement, absence de liens morts, clavier (piège de focus des dialogues, Échap) — et un **audit axe-core** (WCAG 2.x A/AA, hors contraste) de toutes les pages principales, de la fiche transaction, de la page de paiement et de la boîte de remboursement : 0 violation.
+## Tests and checks
 
-Les **11 tests d'origine** de l'application source ont été conservés et portés : 5 tests de dates → `src/domain/period.test.ts` (inchangés dans leur contenu) et 6 tests de répartition en anneau → `src/utils/donut.test.ts` (généralisés des catégories vers des éléments quelconques ; un test supplémentaire vérifie que les arcs couvrent exactement la circonférence).
+235 Vitest tests: domain logic, dataset, IndexedDB service (idempotency, permissions, atomicity, persistence), **interface user journeys** (jsdom) — payment request creation → hosted payment page → partial then full refund, double click, form validation, filters/sorting/pagination, CSV export, roles, reset, persistence after reload, no dead links, keyboard handling (dialog focus trap, Escape) — and an **axe-core audit** (WCAG 2.x A/AA, excluding contrast) of all the main pages, the transaction page, the payment page and the refund dialog: 0 violations.
 
-## Décisions et ajouts par rapport au projet source
+The **11 original tests** of the source application were kept and ported: 5 date tests → `src/domain/period.test.ts` (content unchanged) and 6 donut-split tests → `src/utils/donut.test.ts` (generalized from categories to arbitrary items; an extra test checks that the arcs cover exactly the circumference).
 
-- **Réutilisé** : stack (React 18, Vite, TypeScript strict, Tailwind, Zustand, Dexie, react-router, Vitest), identité visuelle (ivoire, encre, teal `#12574F`/`#00918B`, terracotta `#B9552F`, Literata + Schibsted Grotesk), logique d'anneau (`utils/donut.ts`) et fonctions de mois.
-- **Corrigé / amélioré** : lien mort `/transactions` (inexistant dans la source) ; script `lint` sans ESLint (retiré) ; dates en UTC (`toISOString`) remplacées par l'heure d'Alger ; montants flottants remplacés par des centimes entiers ; polices servies localement (`@fontsource`) au lieu d'un CDN ; cadre mobile fixe 390×844 remplacé par une interface responsive.
-- **Non repris** : le service worker PWA (`vite-plugin-pwa`) — inutile et risqué pour une sandbox dont les données changent à chaque action.
-- **Pas de bibliothèque de graphiques** : la source utilisait déjà du SVG fait main ; le graphique d'activité (barres empilées, tableau alternatif accessible) et l'anneau sont en SVG, sans dépendance.
-- **Séparation par rôle** : l'opérateur a des droits restreints (pas de règlements, pas de modification du profil, pas de réinitialisation, plafond de remboursement) — appliqués dans la couche de service pour la démonstration.
-- **Garde-fous « aucune donnée bancaire »** : la page hébergée n'a aucun champ de carte ; les champs libres refusent toute séquence ressemblant à un numéro de carte (contrôle de Luhn).
-- **Export CSV** : séparateur `;`, BOM UTF-8 (Excel), virgule décimale, et neutralisation des cellules pouvant déclencher des formules (`= + - @`).
+## Decisions and additions compared with the source project
 
-## Limites (à lire avant toute réutilisation)
+- **Reused**: stack (React 18, Vite, strict TypeScript, Tailwind, Zustand, Dexie, react-router, Vitest), visual identity (ivory, ink, teal `#12574F`/`#00918B`, terracotta `#B9552F`, Literata + Schibsted Grotesk), donut logic (`utils/donut.ts`) and month functions.
+- **Fixed / improved**: dead `/transactions` link (nonexistent in the source); `lint` script without ESLint (removed); UTC dates (`toISOString`) replaced by Algiers time; floating-point amounts replaced by integer centimes; fonts served locally (`@fontsource`) instead of a CDN; fixed 390×844 mobile frame replaced by a responsive interface.
+- **Not carried over**: the PWA service worker (`vite-plugin-pwa`) — useless and risky for a sandbox whose data changes on every action.
+- **No charting library**: the source already used hand-made SVG; the activity chart (stacked bars, accessible table alternative) and the donut are SVG, with no dependency.
+- **Role separation**: the operator has restricted permissions (no settlements, no profile editing, no reset, refund cap) — enforced in the service layer for demonstration purposes.
+- **"No banking data" safeguards**: the hosted page has no card field; free-text fields reject any sequence that looks like a card number (Luhn check).
+- **CSV export**: `;` separator, UTF-8 BOM (Excel), decimal comma, and neutralization of cells that could trigger formulas (`= + - @`).
+- **Language**: the interface, code comments, tests and documentation are in English. Number, date and CSV formatting deliberately keeps the Algerian/French conventions listed above, so the behavior of the application did not change.
 
-- **Pas de sécurité serveur** : authentification, rôles, plafonds, idempotence, journal d'audit — tout est côté navigateur et modifiable par l'utilisateur. Le « changement de rôle » est une simulation.
-- **Stockage local** : IndexedDB est mono-navigateur, sans sauvegarde, sans verrouillage inter-onglets, sans chiffrement. Un autre onglet ouvert ne se met pas à jour automatiquement ; recharger la page.
-- **Aucune intégration réelle** : pas d'acquéreur, pas de réseau de cartes, pas de virements, pas de webhooks envoyés. La spécification d'API et la vérification de webhook sont des **modèles à implémenter côté serveur** ; la signature d'exemple est calculée dans le navigateur avec un secret fictif uniquement pour illustrer l'algorithme.
-- **Règlements** : simulation de comptabilité interne, sans rapprochement bancaire ni délais de règlement réels.
-- **Limites fonctionnelles** : une seule devise (DZD), pas d'expiration des demandes de paiement, pas de litiges (chargebacks), pas de multi-organisation, pas de pagination serveur (tout est chargé en mémoire : adapté à quelques centaines de lignes).
-- **Accessibilité** : navigation clavier, libellés, rôles ARIA, lien d'évitement, gestion du focus ; audit automatisé axe-core sans violation ; contrastes du texte ≥ 4,5:1 (calculés sur la palette) et éléments graphiques ≥ 3:1. L'audit automatisé ne remplace pas un test avec un lecteur d'écran réel, non réalisé.
+## Limitations (read before any reuse)
 
-## Contribuer
+- **No server-side security**: authentication, roles, caps, idempotency, audit log — everything runs in the browser and can be modified by the user. The "role switch" is a simulation.
+- **Local storage**: IndexedDB is single-browser, with no backup, no cross-tab locking and no encryption. Another open tab does not update automatically; reload the page.
+- **No real integration**: no acquirer, no card network, no transfers, no webhooks sent. The API specification and the webhook verification are **templates to implement server-side**; the example signature is computed in the browser with a fictitious secret only to illustrate the algorithm.
+- **Settlements**: internal accounting simulation, with no bank reconciliation and no real settlement delays.
+- **Functional limits**: a single currency (DZD), no expiry of payment requests, no disputes (chargebacks), no multi-organization support, no server-side pagination (everything is loaded in memory: suitable for a few hundred rows).
+- **Accessibility**: keyboard navigation, labels, ARIA roles, skip link, focus management; automated axe-core audit with no violation; text contrast ≥ 4.5:1 (computed on the palette) and graphical elements ≥ 3:1. The automated audit does not replace a test with a real screen reader, which has not been done.
 
-Les tâches restantes (tests, recherche juridique, conception du backend, CI, démonstration…) sont listées dans [docs/TASKS.md](docs/TASKS.md) et suivies dans les [issues GitHub](https://github.com/SalimMabed/PSP/issues).
+## Contributing
 
-## Passer à un PSP de production
+The remaining tasks (tests, legal research, backend design, CI, demo…) are listed in [docs/TASKS.md](docs/TASKS.md) and tracked in the [GitHub issues](https://github.com/SalimMabed/PSP/issues).
 
-Voir [docs/PRODUCTION-CHECKLIST.md](docs/PRODUCTION-CHECKLIST.md) (backend autoritaire, authentification/autorisation, idempotence persistante, journalisation, chiffrement, gestion des secrets, webhooks, rapprochement, anti-fraude, exigences légales et réglementaires applicables en Algérie) et [docs/API.md](docs/API.md) (contrat REST cible). Les exigences légales (autorisation d'exercer une activité de paiement, supervision bancaire, protection des données personnelles, sécurité des données de cartes) doivent être **vérifiées auprès des autorités et conseils compétents** : ce dépôt ne les établit pas.
+## Moving to a production PSP
+
+See [docs/PRODUCTION-CHECKLIST.md](docs/PRODUCTION-CHECKLIST.md) (authoritative backend, authentication/authorization, persistent idempotency, logging, encryption, secrets management, webhooks, reconciliation, anti-fraud, legal and regulatory requirements applicable in Algeria) and [docs/API.md](docs/API.md) (target REST contract). The legal requirements (authorization to operate a payment business, banking supervision, personal data protection, card data security) must be **verified with the competent authorities and advisers**: this repository does not establish them.

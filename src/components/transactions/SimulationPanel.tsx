@@ -10,13 +10,13 @@ import { usePspStore } from "@/store/usePspStore";
 type Target = "pending" | "succeeded" | "failed" | "cancelled";
 
 const BUTTONS: { to: Target; label: string; variant: "primary" | "secondary" | "danger" | "accent"; icon: "play" | "check" | "alert" | "ban" }[] = [
-  { to: "pending", label: "Mettre en attente", variant: "secondary", icon: "play" },
-  { to: "succeeded", label: "Simuler un succès", variant: "primary", icon: "check" },
-  { to: "failed", label: "Simuler un refus", variant: "secondary", icon: "alert" },
-  { to: "cancelled", label: "Annuler la demande", variant: "danger", icon: "ban" },
+  { to: "pending", label: "Set to pending", variant: "secondary", icon: "play" },
+  { to: "succeeded", label: "Simulate a success", variant: "primary", icon: "check" },
+  { to: "failed", label: "Simulate a decline", variant: "secondary", icon: "alert" },
+  { to: "cancelled", label: "Cancel the request", variant: "danger", icon: "ban" },
 ];
 
-/** Simulation du cycle de paiement depuis le back-office (succès, refus, attente, annulation). */
+/** Simulates the payment lifecycle from the back office (success, decline, pending, cancellation). */
 export function SimulationPanel({ tx }: { tx: Transaction }) {
   const simulate = usePspStore((s) => s.simulateOutcome);
   const intent = useIntentKey();
@@ -30,16 +30,16 @@ export function SimulationPanel({ tx }: { tx: Transaction }) {
       intent.renew();
       return result;
     },
-    { success: (t) => `${t.reference} : statut mis à jour — « ${STATUS_LABEL[t.status]} » (simulation).` }
+    { success: (t) => `${t.reference}: status updated — "${STATUS_LABEL[t.status]}" (simulation).` }
   );
 
   if (allowed.length === 0) return null;
 
   return (
     <div className="space-y-4">
-      <Notice tone="sandbox">Simulation back-office : ces actions imitent la réponse d'un réseau de paiement fictif.</Notice>
+      <Notice tone="sandbox">Back-office simulation: these actions imitate the response of a fictitious payment network.</Notice>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <SelectField label="Méthode simulée" value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)}>
+        <SelectField label="Simulated method" value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)}>
           {ALL_METHODS.map((m) => (
             <option key={m} value={m}>
               {METHOD_LABEL[m]}
@@ -47,7 +47,7 @@ export function SimulationPanel({ tx }: { tx: Transaction }) {
           ))}
         </SelectField>
         {allowed.includes("failed") && (
-          <SelectField label="Motif en cas de refus" value={failure} onChange={(e) => setFailure(e.target.value as FailureReason)}>
+          <SelectField label="Reason if declined" value={failure} onChange={(e) => setFailure(e.target.value as FailureReason)}>
             {(Object.keys(FAILURE_LABEL) as FailureReason[]).map((f) => (
               <option key={f} value={f}>
                 {FAILURE_LABEL[f]}

@@ -3,8 +3,8 @@ import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import { fileURLToPath } from "node:url";
 
-// Le PWA/service worker du projet source n'est volontairement pas repris :
-// un cache hors-ligne n'a pas de sens pour une sandbox dont les données changent à chaque action.
+// The PWA / service worker of the source project is deliberately not carried over:
+// an offline cache makes no sense for a sandbox whose data changes on every action.
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -13,7 +13,7 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        // Sépare les dépendances volumineuses : meilleur cache navigateur, chunk applicatif plus léger.
+        // Splits the large dependencies: better browser caching, lighter application chunk.
         manualChunks: {
           react: ["react", "react-dom", "react-router-dom"],
           data: ["dexie", "zod", "zustand", "uuid"],
@@ -29,7 +29,7 @@ export default defineConfig({
     environment: "node",
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
-    // Les parcours jsdom + IndexedDB simulé sont lents sous charge (plusieurs fichiers en parallèle).
+    // jsdom + simulated IndexedDB journeys are slow under load (several files in parallel).
     testTimeout: 30_000,
     hookTimeout: 30_000,
   },

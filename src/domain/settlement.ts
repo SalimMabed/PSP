@@ -3,12 +3,12 @@ import { isCaptured } from "./status";
 import type { Refund, Settlement, Transaction } from "./types";
 
 /**
- * Modèle de règlement (SIMULÉ — aucun virement bancaire réel).
+ * Settlement model (SIMULATED: no real bank transfer).
  *
- * Chaque ligne de grand livre est soit un paiement encaissé (+ montant, − commission),
- * soit un remboursement (− montant, + commission restituée). Un lot regroupe les lignes d'un
- * commerçant qui n'appartiennent à aucun lot. Un remboursement postérieur au lot de son paiement
- * est repris comme ajustement négatif dans le lot suivant.
+ * Each ledger line is either a collected payment (+ amount, − fee) or a refund
+ * (− amount, + returned fee). A batch groups a merchant's lines that do not belong to any batch.
+ * A refund recorded after the batch of its payment is carried as a negative adjustment in the
+ * next batch.
  */
 
 export interface UnsettledLines {
@@ -45,8 +45,8 @@ export function totalsOf(lines: UnsettledLines): LineTotals {
 }
 
 /**
- * Construit un lot pour un commerçant. Lève `NOTHING_TO_SETTLE` s'il n'y a aucune ligne ou si
- * le net est nul ou négatif (les lignes sont alors reportées sur un lot ultérieur).
+ * Builds a batch for a merchant. Throws `NOTHING_TO_SETTLE` when there are no lines or when
+ * the net is zero or negative (the lines are then carried over to a later batch).
  */
 export function buildSettlement(
   merchantId: string,
@@ -56,13 +56,13 @@ export function buildSettlement(
 ): { settlement: Settlement; transactions: Transaction[]; refunds: Refund[] } {
   const lines = collectUnsettled(merchantId, transactions, refunds);
   if (lines.transactions.length === 0 && lines.refunds.length === 0) {
-    throw new DomainError("NOTHING_TO_SETTLE", "Aucun montant à régler pour ce commerçant.");
+    throw new DomainError("NOTHING_TO_SETTLE", "Nothing to settle for this merchant.");
   }
   const totals = totalsOf(lines);
   if (totals.net <= 0) {
     throw new DomainError(
       "NOTHING_TO_SETTLE",
-      "Le net à régler est nul ou négatif : les ajustements sont reportés sur un lot ultérieur."
+      "The net amount to settle is zero or negative: adjustments are carried over to a later batch."
     );
   }
   const settlement: Settlement = {
@@ -82,7 +82,7 @@ export function buildSettlement(
   };
 }
 
-/** Résout un lot en attente : réglé (simulé) ou échoué (les lignes sont libérées). */
+/** Resolves a pending batch: settled (simulated) or failed (its lines are released). */
 export function resolveSettlement(
   settlement: Settlement,
   outcome: "settled" | "failed",
@@ -91,11 +91,11 @@ export function resolveSettlement(
   now: string
 ): { settlement: Settlement; transactions: Transaction[]; refunds: Refund[] } {
   if (settlement.status !== "pending") {
-    throw new DomainError("INVALID_STATE", "Ce lot a déjà été traité.");
+    throw new DomainError("INVALID_STATE", "This batch has already been processed.");
   }
   const updated: Settlement = { ...settlement, status: outcome, resolvedAt: now };
   if (outcome === "settled") return { settlement: updated, transactions: [], refunds: [] };
-  // Échec : les paiements et remboursements redeviennent « à régler ».
+  // Failure: the payments and refunds go back to "to be settled".
   return {
     settlement: updated,
     transactions: transactions
@@ -108,16 +108,16 @@ export function resolveSettlement(
 }
 
 export interface Ledger {
-  collected: number; // paiements encaissés (brut)
-  refunded: number; // remboursements enregistrés
-  fees: number; // commissions nettes (après restitutions)
+  collected: number; // collected payments (gross)
+  refunded: number; // recorded refunds
+  fees: number; // net fees (after returns)
   net: number; // collected − refunded − fees
-  settled: number; // net des lots réglés
-  inFlight: number; // net des lots en attente
-  unbatched: number; // net des lignes hors lot (« à régler »)
+  settled: number; // net of settled batches
+  inFlight: number; // net of pending batches
+  unbatched: number; // net of lines outside any batch ("to be settled")
 }
 
-/** Synthèse cohérente des montants encaissés, remboursés et réglés, à partir des seules données brutes. */
+/** Consistent summary of collected, refunded and settled amounts, computed from the raw data only. */
 export function computeLedger(
   transactions: Transaction[],
   refunds: Refund[],

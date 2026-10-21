@@ -5,7 +5,7 @@ import type { Slice } from "@/domain/aggregates";
 import { computeDonutSegments, DONUT_RADIUS, type BreakdownEntry, type DonutItem } from "@/utils/donut";
 import type { PaymentMethod } from "@/domain/types";
 
-/** Couleurs reprises de la palette de la maquette source. */
+/** Colors reused from the source mockup palette. */
 export const METHOD_COLOR: Record<PaymentMethod, string> = {
   cib_sandbox: "#12574F",
   edahabia_sandbox: "#B9552F",
@@ -30,7 +30,7 @@ export function MethodDonut({ slices, total }: { slices: Slice[]; total: number 
   const segments = computeDonutSegments(entries);
 
   if (slices.length === 0) {
-    return <p className="py-8 text-center text-sm text-ink-muted">Aucun paiement encaissé sur cette période.</p>;
+    return <p className="py-8 text-center text-sm text-ink-muted">No payment collected in this period.</p>;
   }
 
   return (
@@ -41,7 +41,7 @@ export function MethodDonut({ slices, total }: { slices: Slice[]; total: number 
           height={SIZE}
           viewBox={`0 0 ${SIZE} ${SIZE}`}
           role="img"
-          aria-label={`Répartition du volume encaissé par méthode : ${entries.map((e) => `${e.item.label} ${e.percent} %`).join(", ")}`}
+          aria-label={`Collected volume breakdown by method: ${entries.map((e) => `${e.item.label} ${e.percent} %`).join(", ")}`}
           style={{ transform: "rotate(-90deg)" }}
         >
           <circle cx={CENTER} cy={CENTER} r={DONUT_RADIUS} fill="none" stroke="#EFEAE0" strokeWidth={STROKE} />
@@ -60,7 +60,7 @@ export function MethodDonut({ slices, total }: { slices: Slice[]; total: number 
           ))}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className="text-[11px] text-ink-muted">Volume encaissé</span>
+          <span className="text-[11px] text-ink-muted">Collected volume</span>
           <span className="num max-w-[110px] break-words text-[15px] font-bold leading-tight">{formatDA(total)}</span>
         </div>
       </div>

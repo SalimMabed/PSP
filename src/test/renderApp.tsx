@@ -7,7 +7,7 @@ import { usePspStore } from "@/store/usePspStore";
 
 const ROUTER_FUTURE = { v7_startTransition: true, v7_relativeSplatPath: true } as const;
 
-/** Repart d'un stockage vide (le jeu de démo est rechargé par l'application au montage). */
+/** Starts from an empty storage (the demo dataset is reloaded by the application on mount). */
 export async function resetStorageAndStore(): Promise<void> {
   const db = getDatabase();
   await db.transaction("rw", db.tables, () => Promise.all(db.tables.map((t) => t.clear())));
@@ -24,7 +24,7 @@ export async function renderApp(route = "/") {
   return { user, ...utils };
 }
 
-/** Simule un « rechargement de page » : l'état mémoire est perdu, le stockage IndexedDB est conservé. */
+/** Simulates a "page reload": the in-memory state is lost, the IndexedDB storage is kept. */
 export function forgetMemoryState(): void {
   usePspStore.setState({ phase: "idle", error: null, data: null, toasts: [] });
 }

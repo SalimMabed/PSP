@@ -16,13 +16,13 @@ describe("summarize", () => {
   ];
   const s = summarize(txs);
 
-  it("compte les transactions par statut", () => {
+  it("counts transactions by status", () => {
     expect(s.count).toBe(8);
     expect(s.byStatus).toMatchObject({ succeeded: 2, partially_refunded: 1, refunded: 1, failed: 1, pending: 1, created: 1, cancelled: 1 });
     expect(Object.values(s.byStatus).reduce((a, b) => a + b, 0)).toBe(s.count);
   });
 
-  it("le volume ne compte que les paiements encaissés (y compris remboursés ensuite)", () => {
+  it("volume only counts collected payments (including those refunded afterwards)", () => {
     expect(s.volume).toBe(650_000);
     expect(s.capturedCount).toBe(4);
     expect(s.refundedAmount).toBe(150_000);
@@ -30,15 +30,15 @@ describe("summarize", () => {
     expect(s.averageTicket).toBe(162_500);
   });
 
-  it("regroupe en ouverts / échoués / annulés / remboursés", () => {
+  it("groups into open / failed / cancelled / refunded", () => {
     expect(s).toMatchObject({ openCount: 2, failedCount: 1, cancelledCount: 1, refundedCount: 2 });
   });
 
-  it("taux de réussite = encaissés / (encaissés + échoués), hors ouverts et annulés", () => {
+  it("success rate = collected / (collected + failed), excluding open and cancelled", () => {
     expect(s.successRate).toBe(80); // 4 / (4 + 1)
   });
 
-  it("gère l'ensemble vide sans division par zéro", () => {
+  it("handles the empty set without dividing by zero", () => {
     const empty = summarize([]);
     expect(empty).toMatchObject({ count: 0, volume: 0, averageTicket: 0, successRate: null, netVolume: 0 });
     expect(summarize([makeTx({ status: "pending", paidAt: undefined })]).successRate).toBeNull();
@@ -46,19 +46,19 @@ describe("summarize", () => {
 });
 
 describe("variation", () => {
-  it("calcule la variation relative arrondie à 0,1 %", () => {
+  it("computes the relative variation rounded to 0.1%", () => {
     expect(variation(120, 100)).toBe(20);
     expect(variation(50, 100)).toBe(-50);
     expect(variation(103, 100)).toBe(3);
     expect(variation(1, 3)).toBe(-66.7);
   });
-  it("renvoie null si la référence est nulle", () => {
+  it("returns null if the reference is zero", () => {
     expect(variation(10, 0)).toBeNull();
   });
 });
 
 describe("buildSeries", () => {
-  it("découpe 7 jours en 7 buckets quotidiens sans trou et additionne les montants par groupe", () => {
+  it("splits 7 days into 7 daily buckets without gaps and sums the amounts per group", () => {
     const period = resolvePeriod("7d", NOW);
     const txs = [
       makeTx({ createdAt: new Date(NOW - 1 * 3600_000).toISOString(), status: "succeeded", amount: 100_000 }),
@@ -75,7 +75,7 @@ describe("buildSeries", () => {
     expect(totalCount).toBe(3);
   });
 
-  it("passe en semaines pour 90 jours et conserve le total", () => {
+  it("switches to weeks for 90 days and keeps the total", () => {
     const period = resolvePeriod("90d", NOW);
     const txs = Array.from({ length: 20 }, (_, i) =>
       makeTx({ createdAt: new Date(NOW - i * 4 * DAY_MS).toISOString(), status: "succeeded", amount: 10_000 })
@@ -87,7 +87,7 @@ describe("buildSeries", () => {
     for (let i = 1; i < buckets.length; i++) expect(buckets[i].from).toBeGreaterThan(buckets[i - 1].from);
   });
 
-  it("gère l'absence de transactions et la période « toute »", () => {
+  it("handles the absence of transactions and the \"all time\" period", () => {
     expect(buildSeries([], null, NOW).buckets.length).toBeGreaterThanOrEqual(1);
     const old = makeTx({ createdAt: new Date(NOW - 300 * DAY_MS).toISOString() });
     const { granularity } = buildSeries([old], null, NOW);
@@ -96,7 +96,7 @@ describe("buildSeries", () => {
 });
 
 describe("volumeByMethod", () => {
-  it("agrège le volume encaissé par méthode, trié, sans les paiements non encaissés", () => {
+  it("aggregates the collected volume by method, sorted, without uncollected payments", () => {
     const slices = volumeByMethod([
       makeTx({ method: "cib_sandbox", amount: 300_000 }),
       makeTx({ method: "cib_sandbox", amount: 100_000 }),

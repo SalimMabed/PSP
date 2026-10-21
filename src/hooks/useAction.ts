@@ -3,17 +3,17 @@ import { newIdempotencyKey } from "@/domain/ids";
 import { errorMessage, usePspStore } from "@/store/usePspStore";
 
 interface Options<R> {
-  /** Message de succès (toast). */
+  /** Success message (toast). */
   success?: string | ((result: R) => string);
-  /** Si vrai, l'erreur n'est pas affichée en toast (le composant l'affiche lui-même via `error`). */
+  /** If true, the error is not shown as a toast (the component displays it itself via `error`). */
   inlineError?: boolean;
 }
 
 /**
- * Enveloppe une action asynchrone sensible :
- *  - verrou synchrone (ref) : un 2e clic pendant l'exécution est ignoré, même avant le re-rendu ;
- *  - erreurs métier converties en message français ;
- *  - toast de succès / d'erreur.
+ * Wraps a sensitive asynchronous action:
+ *  - synchronous lock (ref): a second click during execution is ignored, even before the re-render;
+ *  - business errors converted into a user-facing message;
+ *  - success / error toast.
  */
 export function useAction<A extends unknown[], R>(fn: (...args: A) => Promise<R>, options: Options<R> = {}) {
   const inFlight = useRef(false);
@@ -53,9 +53,9 @@ export function useAction<A extends unknown[], R>(fn: (...args: A) => Promise<R>
 }
 
 /**
- * Clé d'idempotence liée à UNE intention utilisateur (un formulaire, un bouton).
- * Elle reste identique tant que l'action n'a pas abouti (retries, double clics) ;
- * `renew()` en génère une nouvelle une fois l'intention satisfaite.
+ * Idempotency key tied to ONE user intent (a form, a button).
+ * It stays the same until the action has succeeded (retries, double clicks);
+ * `renew()` generates a new one once the intent has been fulfilled.
  */
 export function useIntentKey() {
   const ref = useRef<string>(newIdempotencyKey());

@@ -13,7 +13,7 @@ export type OptionalColumn = "customer" | "merchant" | "method" | "order";
 interface Props {
   rows: Transaction[];
   lookup: Lookup;
-  /** Colonnes facultatives (la référence, la date, le montant et le statut sont toujours présents). */
+  /** Optional columns (reference, date, amount and status are always present). */
   columns?: OptionalColumn[];
   sort?: { key: TxSortKey; dir: SortDir };
   onSort?: (key: TxSortKey) => void;
@@ -44,7 +44,7 @@ function SortHeader({
           type="button"
           onClick={() => onSort(sortKey)}
           className={`inline-flex items-center gap-1 font-semibold uppercase tracking-wide hover:text-ink ${active ? "text-ink" : ""}`}
-          aria-label={`Trier par ${label.toLowerCase()}${active ? (sort!.dir === "asc" ? " (croissant)" : " (décroissant)") : ""}`}
+          aria-label={`Sort by ${label.toLowerCase()}${active ? (sort!.dir === "asc" ? " (ascending)" : " (descending)") : ""}`}
         >
           {label}
           <Icon name={active ? (sort!.dir === "asc" ? "sort-up" : "sort-down") : "sort-both"} size={13} />
@@ -80,22 +80,22 @@ export function TransactionTable({ rows, lookup, columns = ["customer", "merchan
         <caption className="sr-only">{caption}</caption>
         <thead>
           <tr>
-            <SortHeader label="Référence" sortKey="reference" sort={sort} onSort={onSort} />
+            <SortHeader label="Reference" sortKey="reference" sort={sort} onSort={onSort} />
             <SortHeader label="Date" sortKey="createdAt" sort={sort} onSort={onSort} className="hidden md:table-cell" />
-            {has("customer") && <SortHeader label="Client" sortKey="customer" sort={sort} onSort={onSort} className="hidden sm:table-cell" />}
-            {has("merchant") && <SortHeader label="Commerçant" sortKey="merchant" sort={sort} onSort={onSort} className="hidden lg:table-cell" />}
+            {has("customer") && <SortHeader label="Customer" sortKey="customer" sort={sort} onSort={onSort} className="hidden sm:table-cell" />}
+            {has("merchant") && <SortHeader label="Merchant" sortKey="merchant" sort={sort} onSort={onSort} className="hidden lg:table-cell" />}
             {has("method") && (
               <th scope="col" className="hidden 2xl:table-cell">
-                Méthode
+                Method
               </th>
             )}
             {has("order") && (
               <th scope="col" className="hidden 2xl:table-cell">
-                Commande
+                Order
               </th>
             )}
-            <SortHeader label="Montant" sortKey="amount" sort={sort} onSort={onSort} align="right" />
-            <SortHeader label="Statut" sortKey="status" sort={sort} onSort={onSort} />
+            <SortHeader label="Amount" sortKey="amount" sort={sort} onSort={onSort} align="right" />
+            <SortHeader label="Status" sortKey="status" sort={sort} onSort={onSort} />
           </tr>
         </thead>
         <tbody>
@@ -126,7 +126,7 @@ export function TransactionTable({ rows, lookup, columns = ["customer", "merchan
                 {has("order") && <td className="num hidden text-ink-soft 2xl:table-cell">{t.orderRef}</td>}
                 <td className="num whitespace-nowrap text-right font-semibold">
                   {formatDA(t.amount)}
-                  {t.refunded > 0 && <div className="text-[12px] font-normal text-refund">−{formatDA(t.refunded)} remboursé</div>}
+                  {t.refunded > 0 && <div className="text-[12px] font-normal text-refund">−{formatDA(t.refunded)} refunded</div>}
                 </td>
                 <td>
                   <StatusBadge status={t.status} />

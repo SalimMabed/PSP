@@ -16,10 +16,10 @@ import type { FailureReason, PaymentMethod, Transaction } from "@/domain/types";
 import { usePspStore } from "@/store/usePspStore";
 
 const METHOD_HELP: Record<PaymentMethod, string> = {
-  cib_sandbox: "Carte interbancaire fictive — aucun numéro à saisir",
-  edahabia_sandbox: "Carte Edahabia fictive — aucun numéro à saisir",
-  wallet_sandbox: "Portefeuille mobile fictif",
-  transfer_sandbox: "Virement fictif",
+  cib_sandbox: "Fictitious interbank card — no number to enter",
+  edahabia_sandbox: "Fictitious Edahabia card — no number to enter",
+  wallet_sandbox: "Fictitious mobile wallet",
+  transfer_sandbox: "Fictitious bank transfer",
 };
 
 type Target = "pending" | "succeeded" | "failed" | "cancelled";
@@ -38,47 +38,47 @@ function Outcome({ tx }: { tx: Transaction }) {
       </span>
       <h2 className="text-[22px] font-semibold">
         {ok
-          ? "Paiement simulé réussi"
+          ? "Simulated payment succeeded"
           : bad
-            ? "Paiement refusé (simulation)"
+            ? "Payment declined (simulation)"
             : tx.status === "pending"
-              ? "Paiement en attente de confirmation"
+              ? "Payment awaiting confirmation"
               : tx.status === "cancelled"
-                ? "Demande annulée"
+                ? "Request cancelled"
                 : STATUS_LABEL[tx.status]}
       </h2>
       <p className="mx-auto mt-2 max-w-sm text-[14px] text-ink-muted">
-        {ok && "Aucun montant réel n'a été débité : ceci est une confirmation de démonstration."}
-        {bad && `${tx.failureReason ? FAILURE_LABEL[tx.failureReason] + ". " : ""}Cette demande est clôturée ; le commerçant doit en créer une nouvelle.`}
-        {tx.status === "cancelled" && "Cette demande de paiement n'est plus active."}
-        {tx.status === "pending" && "Le résultat n'est pas encore connu. Vous pouvez le simuler ci-dessous."}
+        {ok && "No real amount was charged: this is a demonstration confirmation."}
+        {bad && `${tx.failureReason ? FAILURE_LABEL[tx.failureReason] + ". " : ""}This request is closed; the merchant must create a new one.`}
+        {tx.status === "cancelled" && "This payment request is no longer active."}
+        {tx.status === "pending" && "The outcome is not known yet. You can simulate it below."}
       </p>
       <dl className="mx-auto mt-5 grid max-w-sm grid-cols-2 gap-x-4 gap-y-2 rounded-xl bg-ivory-soft p-4 text-left text-[13.5px]">
-        <dt className="text-ink-muted">Référence</dt>
+        <dt className="text-ink-muted">Reference</dt>
         <dd className="num m-0 text-right font-semibold">{tx.reference}</dd>
-        <dt className="text-ink-muted">Montant</dt>
+        <dt className="text-ink-muted">Amount</dt>
         <dd className="num m-0 text-right font-semibold">{formatDA(tx.amount)}</dd>
-        <dt className="text-ink-muted">Méthode</dt>
+        <dt className="text-ink-muted">Method</dt>
         <dd className="m-0 text-right">{tx.method ? METHOD_LABEL[tx.method] : "—"}</dd>
-        <dt className="text-ink-muted">Statut</dt>
+        <dt className="text-ink-muted">Status</dt>
         <dd className="m-0 flex justify-end">
           <StatusBadge status={tx.status} />
         </dd>
-        <dt className="text-ink-muted">Mis à jour</dt>
+        <dt className="text-ink-muted">Updated</dt>
         <dd className="num m-0 text-right">{formatDateTime(tx.updatedAt)}</dd>
       </dl>
     </div>
   );
 }
 
-/** Page de paiement hébergée de DÉMONSTRATION : aucune saisie bancaire, uniquement des méthodes sandbox. */
+/** DEMONSTRATION hosted payment page: no banking input, only sandbox methods. */
 export function Checkout() {
   const { token } = useParams();
   const data = useData();
   const simulate = usePspStore((s) => s.simulateOutcome);
   const intent = useIntentKey();
   const tx = data.transactions.find((t) => t.checkoutToken === token);
-  useDocumentTitle(tx ? `Paiement ${tx.reference}` : "Lien de paiement introuvable");
+  useDocumentTitle(tx ? `Payment ${tx.reference}` : "Payment link not found");
 
   const [method, setMethod] = useState<PaymentMethod | null>(null);
   const [failure, setFailure] = useState<FailureReason>("card_declined");
@@ -114,13 +114,13 @@ export function Checkout() {
             <BrandMark size={30} />
             <span className="font-serif text-[16px] font-semibold">PSP Sandbox</span>
           </div>
-          <SandboxBadge label="Page de paiement — sandbox" />
+          <SandboxBadge label="Payment page — sandbox" />
         </div>
 
         <main className="card overflow-hidden">
-          <h1 className="sr-only">Page de paiement hébergée de démonstration</h1>
+          <h1 className="sr-only">Demonstration hosted payment page</h1>
           <div role="note" className="border-b border-terracotta/25 bg-terracotta-light px-5 py-2.5 text-[12.5px] leading-snug text-terracotta-dark">
-            <strong>Environnement de démonstration.</strong> Aucun paiement réel : ne saisissez jamais de vraies données bancaires. Les méthodes ci-dessous sont fictives.
+            <strong>Demonstration environment.</strong> No real payment: never enter real banking data. The methods below are fictitious.
           </div>
 
           {!tx ? (
@@ -128,22 +128,22 @@ export function Checkout() {
               <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-danger-bg text-danger">
                 <Icon name="link" size={22} />
               </span>
-              <h2 className="text-lg font-semibold">Lien de paiement introuvable</h2>
-              <p className="mx-auto mt-2 max-w-sm text-sm text-ink-muted">Ce lien est invalide, ou la démo a été réinitialisée depuis sa création.</p>
+              <h2 className="text-lg font-semibold">Payment link not found</h2>
+              <p className="mx-auto mt-2 max-w-sm text-sm text-ink-muted">This link is invalid, or the demo was reset since it was created.</p>
               <LinkButton to="/transactions" variant="primary" className="mt-5">
-                Retour au back-office
+                Back to the back office
               </LinkButton>
             </div>
           ) : (
             <div className="px-6 py-5">
               <div className="flex items-start justify-between gap-3 border-b border-ivory-line pb-4">
                 <div className="min-w-0">
-                  <p className="m-0 text-[12.5px] font-semibold uppercase tracking-wide text-ink-muted">Paiement à</p>
-                  <p className="m-0 truncate text-[17px] font-semibold">{merchant?.name ?? "Commerçant"}</p>
+                  <p className="m-0 text-[12.5px] font-semibold uppercase tracking-wide text-ink-muted">Payment to</p>
+                  <p className="m-0 truncate text-[17px] font-semibold">{merchant?.name ?? "Merchant"}</p>
                   <p className="m-0 mt-0.5 text-[13.5px] text-ink-muted">
                     {tx.description} · <span className="num">{tx.orderRef}</span>
                   </p>
-                  {customer && <p className="m-0 text-[12.5px] text-ink-muted">Client : {customer.name}</p>}
+                  {customer && <p className="m-0 text-[12.5px] text-ink-muted">Customer: {customer.name}</p>}
                 </div>
                 <p className="num m-0 shrink-0 font-serif text-[26px] font-semibold leading-none">{formatDA(tx.amount)}</p>
               </div>
@@ -152,11 +152,11 @@ export function Checkout() {
                 <>
                   {tx.status === "pending" && (
                     <div className="mt-4">
-                      <Notice tone="warning">Un paiement est déjà en attente de confirmation. Simulez son issue ci-dessous.</Notice>
+                      <Notice tone="warning">A payment is already awaiting confirmation. Simulate its outcome below.</Notice>
                     </div>
                   )}
                   <fieldset className="m-0 mt-5 border-0 p-0">
-                    <legend className="mb-2 p-0 text-[14px] font-semibold">Choisissez une méthode de paiement (sandbox)</legend>
+                    <legend className="mb-2 p-0 text-[14px] font-semibold">Choose a payment method (sandbox)</legend>
                     <div className="grid gap-2" role="radiogroup" aria-describedby={methodError ? "method-error" : undefined}>
                       {ALL_METHODS.map((m) => {
                         const selected = (method ?? tx.method) === m;
@@ -182,7 +182,7 @@ export function Checkout() {
                               <span className="block text-[14.5px] font-semibold">{METHOD_LABEL[m]}</span>
                               <span className="block text-[12.5px] text-ink-muted">{METHOD_HELP[m]}</span>
                             </span>
-                            <SandboxBadge label="Fictif" />
+                            <SandboxBadge label="Fictitious" />
                           </label>
                         );
                       })}
@@ -190,17 +190,17 @@ export function Checkout() {
                     {methodError && (
                       <p id="method-error" role="alert" className="field-error">
                         <Icon name="alert" size={14} className="mt-0.5 shrink-0" />
-                        Choisissez une méthode de paiement pour continuer.
+                        Choose a payment method to continue.
                       </p>
                     )}
                   </fieldset>
 
                   <div className="mt-5 space-y-3">
                     <Button variant="primary" className="w-full" icon="check" disabled={action.busy} onClick={() => choose("succeeded")}>
-                      Payer {formatDA(tx.amount)} — simuler un succès
+                      Pay {formatDA(tx.amount)} — simulate a success
                     </Button>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
-                      <SelectField label="Motif du refus simulé" value={failure} onChange={(e) => setFailure(e.target.value as FailureReason)}>
+                      <SelectField label="Simulated decline reason" value={failure} onChange={(e) => setFailure(e.target.value as FailureReason)}>
                         {(Object.keys(FAILURE_LABEL) as FailureReason[]).map((f) => (
                           <option key={f} value={f}>
                             {FAILURE_LABEL[f]}
@@ -208,17 +208,17 @@ export function Checkout() {
                         ))}
                       </SelectField>
                       <Button disabled={action.busy} icon="alert" onClick={() => choose("failed")}>
-                        Simuler un refus
+                        Simulate a decline
                       </Button>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {tx.status === "created" && (
                         <Button disabled={action.busy} icon="clock" onClick={() => choose("pending")}>
-                          Laisser en attente
+                          Leave pending
                         </Button>
                       )}
                       <Button variant="danger" disabled={action.busy} icon="ban" onClick={() => choose("cancelled")}>
-                        Annuler
+                        Cancel
                       </Button>
                     </div>
                   </div>
@@ -239,7 +239,7 @@ export function Checkout() {
         <p className="mt-4 text-center text-[12.5px] text-ink-muted">
           {tx ? (
             <Link to={`/transactions/${tx.id}`} className="font-semibold text-teal underline-offset-2 hover:underline">
-              ← Retour au back-office (fiche {tx.reference})
+              ← Back to the back office (profile {tx.reference})
             </Link>
           ) : null}
         </p>

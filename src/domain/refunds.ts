@@ -3,7 +3,7 @@ import { formatDA, prorate } from "./money";
 import { isRefundableStatus, STATUS_LABEL } from "./status";
 import type { Refund, RefundReason, Transaction } from "./types";
 
-/** Montant encore remboursable (centimes). 0 si le statut n'autorise pas de remboursement. */
+/** Amount still refundable (centimes). 0 if the status does not allow refunds. */
 export function refundableAmount(tx: Transaction): number {
   if (!isRefundableStatus(tx.status)) return 0;
   return Math.max(tx.amount - tx.refunded, 0);
@@ -23,11 +23,11 @@ export interface RefundContext {
 }
 
 /**
- * Valide et calcule un remboursement (partiel ou total) de façon pure.
- * - uniquement sur un paiement encaissé (réussi / partiellement remboursé) ;
- * - montant entier strictement positif, jamais supérieur au solde remboursable ;
- * - la commission restituée suit le cumul remboursé, de sorte qu'un remboursement total
- *   restitue exactement la commission initiale (pas de dérive d'arrondi).
+ * Validates and computes a refund (partial or full) as a pure function.
+ * - only on a collected payment (succeeded / partially refunded);
+ * - strictly positive integer amount, never above the refundable balance;
+ * - the returned fee follows the cumulative refunded amount, so a full refund
+ *   returns exactly the initial fee (no rounding drift).
  */
 export function planRefund(
   tx: Transaction,
@@ -37,17 +37,17 @@ export function planRefund(
   if (!isRefundableStatus(tx.status)) {
     throw new DomainError(
       "NOT_REFUNDABLE",
-      `Un paiement « ${STATUS_LABEL[tx.status]} » ne peut pas être remboursé.`
+      `A payment with status "${STATUS_LABEL[tx.status]}" cannot be refunded.`
     );
   }
   if (!Number.isSafeInteger(request.amount) || request.amount <= 0) {
-    throw new DomainError("INVALID_AMOUNT", "Le montant du remboursement doit être strictement positif.");
+    throw new DomainError("INVALID_AMOUNT", "The refund amount must be strictly positive.");
   }
   const remaining = refundableAmount(tx);
   if (request.amount > remaining) {
     throw new DomainError(
       "REFUND_EXCEEDS_REMAINING",
-      `Montant supérieur au solde remboursable (${formatDA(remaining, { decimals: "auto" })}).`
+      `Amount exceeds the refundable balance (${formatDA(remaining, { decimals: "auto" })}).`
     );
   }
 
@@ -82,7 +82,7 @@ export function planRefund(
         at: ctx.now,
         from: tx.status,
         to: toStatus,
-        note: `Remboursement ${ctx.reference} : ${formatDA(request.amount)}`,
+        note: `Refund ${ctx.reference}: ${formatDA(request.amount)}`,
         actor: ctx.actor,
       },
     ],

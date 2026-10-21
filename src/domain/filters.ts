@@ -2,9 +2,9 @@ import { ALL_METHODS, ALL_STATUSES, METHOD_LABEL, STATUS_LABEL } from "./status"
 import { inRange, type DateRange } from "./period";
 import type { Customer, Merchant, PaymentMethod, PaymentStatus, Transaction } from "./types";
 
-// ---------- Recherche ----------
+// ---------- Search ----------
 
-/** Minuscules sans accents, pour une recherche tolérante (« Hôpital » ~ « hopital »). */
+/** Lowercase without accents, for a tolerant search ("Café" ~ "cafe"). */
 export function normalize(text: string): string {
   return text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 }
@@ -27,10 +27,10 @@ export interface TxFilters {
   methods: PaymentMethod[];
   merchantId: string;
   customerId: string;
-  /** Montants en centimes (inclus). */
+  /** Amounts in centimes (inclusive). */
   minAmount: number | null;
   maxAmount: number | null;
-  /** Filtre de période (bornes absolues), géré par l'appelant à partir de `resolvePeriod`. */
+  /** Period filter (absolute bounds), handled by the caller from `resolvePeriod`. */
   range: DateRange | null;
 }
 
@@ -119,19 +119,19 @@ export function sortTransactions(
   return [...transactions].sort((a, b) => {
     const va = value(a);
     const vb = value(b);
-    const cmp = typeof va === "number" && typeof vb === "number" ? va - vb : String(va).localeCompare(String(vb), "fr");
+    const cmp = typeof va === "number" && typeof vb === "number" ? va - vb : String(va).localeCompare(String(vb), "en");
     if (cmp !== 0) return cmp * sign;
-    // Départage stable et déterministe
+    // Stable, deterministic tie-break
     return Date.parse(b.createdAt) - Date.parse(a.createdAt) || a.id.localeCompare(b.id);
   });
 }
 
 export interface Page<T> {
   items: T[];
-  page: number; // 1-indexé, borné à [1, pageCount]
+  page: number; // 1-indexed, clamped to [1, pageCount]
   pageCount: number;
   total: number;
-  from: number; // index 1-indexé du premier élément affiché (0 si vide)
+  from: number; // 1-indexed position of the first displayed item (0 if empty)
   to: number;
 }
 
@@ -151,7 +151,7 @@ export function paginate<T>(items: T[], page: number, pageSize: number): Page<T>
   };
 }
 
-// ---------- Codec URL (filtres partageables) ----------
+// ---------- URL codec (shareable filters) ----------
 
 export interface TxQuery {
   filters: Omit<TxFilters, "range">;
@@ -176,7 +176,7 @@ function parseMinor(raw: string | null): number | null {
   return Number.isSafeInteger(n) && n >= 0 ? n : null;
 }
 
-/** Les montants sont transportés en centimes entiers dans l'URL (`min`, `max`). */
+/** Amounts travel as integer centimes in the URL (`min`, `max`). */
 export function parseTxQuery(params: URLSearchParams): TxQuery {
   const sort = params.get("sort") as TxSortKey | null;
   const dir = params.get("dir");
@@ -225,7 +225,7 @@ export function activeFilterCount(f: Omit<TxFilters, "range">): number {
   );
 }
 
-// ---------- Clients & commerçants ----------
+// ---------- Customers & merchants ----------
 
 export interface PartyStats {
   count: number;

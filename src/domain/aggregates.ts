@@ -3,10 +3,10 @@ import { isCaptured, isOpen } from "./status";
 import type { PaymentMethod, PaymentStatus, Transaction } from "./types";
 
 /**
- * Définitions (uniques, utilisées partout — tableau de bord, fiches, exports) :
- *  - transaction « encaissée » : réussie, partiellement remboursée ou remboursée ;
- *  - volume = somme des montants des transactions encaissées (brut, avant remboursements) ;
- *  - taux de réussite = encaissées / (encaissées + échouées) ; les transactions ouvertes ou annulées sont exclues.
+ * Definitions (single source, used everywhere: dashboard, detail pages, exports):
+ *  - a "collected" transaction is succeeded, partially refunded or refunded;
+ *  - volume = sum of the amounts of collected transactions (gross, before refunds);
+ *  - success rate = collected / (collected + failed); open or cancelled transactions are excluded.
  */
 export interface Summary {
   count: number;
@@ -15,12 +15,12 @@ export interface Summary {
   openCount: number;
   failedCount: number;
   cancelledCount: number;
-  refundedCount: number; // partiellement ou totalement remboursées
+  refundedCount: number; // partially or fully refunded
   volume: number;
   refundedAmount: number;
   netVolume: number;
   averageTicket: number;
-  /** Pourcentage 0–100, ou null si aucune transaction décisive. */
+  /** Percentage 0–100, or null when there is no conclusive transaction. */
   successRate: number | null;
 }
 
@@ -65,13 +65,13 @@ export function summarize(transactions: Transaction[]): Summary {
   };
 }
 
-/** Variation en % entre deux valeurs (null si la référence est nulle). */
+/** Variation in % between two values (null if the reference is zero). */
 export function variation(current: number, previous: number): number | null {
   if (previous === 0) return null;
   return Math.round(((current - previous) / Math.abs(previous)) * 1000) / 10;
 }
 
-// ---------- Séries temporelles ----------
+// ---------- Time series ----------
 
 export type Granularity = "day" | "week" | "month";
 
@@ -95,8 +95,8 @@ function pickGranularity(days: number): Granularity {
 const emptyGroup = () => ({ count: 0, amount: 0 });
 
 /**
- * Regroupe des transactions par jour / semaine / mois (heure d'Alger).
- * `range` fournit les bornes (null = de la première transaction jusqu'à `now`).
+ * Groups transactions by day / week / month (Algiers time).
+ * `range` provides the bounds (null = from the first transaction up to `now`).
  */
 export function buildSeries(
   transactions: Transaction[],
@@ -120,7 +120,7 @@ export function buildSeries(
       return { key: k, label: formatDayShort(k), from: day, to: day + DAY_MS - 1 };
     }
     if (granularity === "week") {
-      // Semaines alignées sur la fin de la période pour que la dernière soit complète à droite.
+      // Weeks aligned on the end of the period so that the last one is complete on the right.
       const offsetWeeks = Math.floor((endDay - day) / (7 * DAY_MS));
       const weekStart = endDay - offsetWeeks * 7 * DAY_MS - 6 * DAY_MS;
       const k = dayKey(weekStart);
@@ -144,7 +144,7 @@ export function buildSeries(
     return b;
   };
 
-  // Pré-remplit toutes les périodes pour éviter les trous dans le graphique.
+  // Pre-fills every period to avoid gaps in the chart.
   for (let ms = startDay; ms <= endDay; ms += DAY_MS) ensure(ms);
 
   for (const t of transactions) {
@@ -165,15 +165,15 @@ export function buildSeries(
   return { granularity, buckets };
 }
 
-// ---------- Répartitions ----------
+// ---------- Breakdowns ----------
 
 export interface Slice {
   key: string;
   total: number;
-  percent: number; // 0–100 arrondi
+  percent: number; // rounded 0–100
 }
 
-/** Volume encaissé par méthode de paiement, trié par montant décroissant. */
+/** Collected volume by payment method, sorted by decreasing amount. */
 export function volumeByMethod(transactions: Transaction[]): Slice[] {
   const totals = new Map<PaymentMethod, number>();
   for (const t of transactions) {

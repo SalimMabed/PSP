@@ -28,12 +28,13 @@ import { ALL_METHODS, ALL_STATUSES, METHOD_LABEL, STATUS_LABEL } from "@/domain/
 import { usePspStore } from "@/store/usePspStore";
 import { downloadTextFile, plural } from "@/utils/format";
 
-/** Champ montant (DA) : applique la valeur à l'URL dès qu'elle est valide ou vide. */
+/** Amount field (DA): applies the value to the URL as soon as it is valid or empty. */
 function AmountFilter({ label, valueMinor, onApply }: { label: string; valueMinor: number | null; onApply: (minor: number | null) => void }) {
+  const idSuffix = label.toLowerCase().replace(/[^a-z0-9]+/g, "-"); // valid HTML id (no spaces)
   const [text, setText] = useState(valueMinor === null ? "" : minorToInput(valueMinor));
   const [error, setError] = useState<string | undefined>();
 
-  // Resynchronise si l'URL change ailleurs (réinitialisation, lien depuis une autre page).
+  // Resynchronizes if the URL changes elsewhere (reset, link from another page).
   useEffect(() => {
     setText(valueMinor === null ? "" : minorToInput(valueMinor));
     setError(undefined);
@@ -41,19 +42,19 @@ function AmountFilter({ label, valueMinor, onApply }: { label: string; valueMino
 
   return (
     <div>
-      <label className="field-label" htmlFor={`amount-${label}`}>
+      <label className="field-label" htmlFor={`amount-${idSuffix}`}>
         {label}
       </label>
       <div className="relative">
         <input
-          id={`amount-${label}`}
+          id={`amount-${idSuffix}`}
           className="field-input num pr-10"
           inputMode="decimal"
           autoComplete="off"
           placeholder="—"
           value={text}
           aria-invalid={error ? true : undefined}
-          aria-describedby={error ? `amount-${label}-err` : undefined}
+          aria-describedby={error ? `amount-${idSuffix}-err` : undefined}
           onChange={(e) => {
             const v = e.target.value;
             setText(v);
@@ -74,7 +75,7 @@ function AmountFilter({ label, valueMinor, onApply }: { label: string; valueMino
         </span>
       </div>
       {error && (
-        <p id={`amount-${label}-err`} role="alert" className="field-error">
+        <p id={`amount-${idSuffix}-err`} role="alert" className="field-error">
           {error}
         </p>
       )}
@@ -98,15 +99,15 @@ export function Transactions() {
   const [searchText, setSearchText] = useState(filters.q);
   const recordExport = usePspStore((s) => s.recordExport);
 
-  // Références « dernière valeur » : évitent qu'une mise à jour d'URL s'appuie sur un rendu périmé
-  // (ex. clic sur un filtre pendant que la recherche tapée attend son anti-rebond).
+  // "Latest value" refs: prevent a URL update from relying on a stale render
+  // (e.g. clicking a filter while the typed search is waiting for its debounce).
   const queryRef = useRef(query);
   queryRef.current = query;
   const searchRef = useRef(searchText);
   searchRef.current = searchText;
 
   function commit(next: TxQuery) {
-    queryRef.current = next; // appels successifs dans le même tick : chacun part de l'état le plus récent
+    queryRef.current = next; // successive calls in the same tick: each starts from the most recent state
     setParams(txQueryToParams(next), { replace: true });
   }
 
@@ -116,13 +117,13 @@ export function Transactions() {
     commit(next);
   }
 
-  /** Fusionne un changement de filtre dans l'état le plus récent, en y incluant la recherche en cours de frappe. */
+  /** Merges a filter change into the most recent state, including the search being typed. */
   function updateFilters(patch: Partial<TxQuery["filters"]>) {
     const base = queryRef.current;
     commit({ ...base, filters: { ...base.filters, q: searchRef.current, ...patch }, page: 1 });
   }
 
-  // La recherche est répercutée dans l'URL après une courte pause de frappe.
+  // The search is propagated to the URL after a short typing pause.
   useEffect(() => {
     if (searchText === queryRef.current.filters.q) return;
     const timer = window.setTimeout(() => updateFilters({ q: searchText }), 250);
@@ -154,7 +155,7 @@ export function Transactions() {
       await recordExport(sorted.length);
       return sorted.length;
     },
-    { success: (n) => `Export CSV prêt : ${plural(n, "transaction")} (sandbox).` }
+    { success: (n) => `CSV export ready: ${plural(n, "transaction")} (sandbox).` }
   );
 
   const canExport = can(role, "export.csv");
@@ -164,18 +165,18 @@ export function Transactions() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="m-0 text-[14px] text-ink-muted" aria-live="polite">
-          <strong className="num text-ink">{plural(sorted.length, "transaction")}</strong> · {period.label.toLowerCase()} · volume encaissé{" "}
+          <strong className="num text-ink">{plural(sorted.length, "transaction")}</strong> · {period.label.toLowerCase()} · collected volume{" "}
           <strong className="num text-ink">{formatDA(summary.volume)}</strong>
         </p>
         <div className="flex flex-wrap gap-2">
           {canExport && (
             <Button icon="download" onClick={() => void exporter.run()} loading={exporter.busy} disabled={sorted.length === 0}>
-              Exporter en CSV
+              Export to CSV
             </Button>
           )}
           {canCreate && (
             <Button variant="primary" icon="plus" onClick={() => setTestOpen(true)}>
-              Transaction de test
+              Test transaction
             </Button>
           )}
         </div>
@@ -185,7 +186,7 @@ export function Transactions() {
         <div className="flex flex-wrap items-end gap-3">
           <div className="relative min-w-[220px] flex-1">
             <label htmlFor="tx-search" className="sr-only">
-              Rechercher une transaction
+              Search for a transaction
             </label>
             <Icon name="search" size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted" />
             <input
@@ -193,17 +194,17 @@ export function Transactions() {
               type="search"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              placeholder="Rechercher : référence, client, e-mail, commande, commerçant…"
+              placeholder="Search: reference, customer, email, order, merchant…"
               className="field-input pl-10"
               autoComplete="off"
             />
           </div>
           <Button icon="filter" aria-expanded={showFilters} aria-controls="tx-filters" onClick={() => setShowFilters((v) => !v)}>
-            Filtres{filterCount - (filters.q ? 1 : 0) > 0 ? ` (${filterCount - (filters.q ? 1 : 0)})` : ""}
+            Filters{filterCount - (filters.q ? 1 : 0) > 0 ? ` (${filterCount - (filters.q ? 1 : 0)})` : ""}
           </Button>
           {filterCount > 0 && (
             <Button variant="ghost" icon="x" onClick={() => setParams(new URLSearchParams(), { replace: true })}>
-              Réinitialiser
+              Reset
             </Button>
           )}
         </div>
@@ -211,7 +212,7 @@ export function Transactions() {
         {showFilters && (
           <div id="tx-filters" className="mt-4 space-y-4 border-t border-ivory-line pt-4">
             <fieldset className="m-0 border-0 p-0">
-              <legend className="field-label">Statut</legend>
+              <legend className="field-label">Status</legend>
               <div className="flex flex-wrap gap-2">
                 {ALL_STATUSES.map((s) => (
                   <button
@@ -229,7 +230,7 @@ export function Transactions() {
               </div>
             </fieldset>
             <fieldset className="m-0 border-0 p-0">
-              <legend className="field-label">Méthode</legend>
+              <legend className="field-label">Method</legend>
               <div className="flex flex-wrap gap-2">
                 {ALL_METHODS.map((m) => (
                   <button
@@ -247,26 +248,26 @@ export function Transactions() {
               </div>
             </fieldset>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <SelectField label="Commerçant" value={filters.merchantId} onChange={(e) => updateFilters({ merchantId: e.target.value })}>
-                <option value="">Tous les commerçants</option>
+              <SelectField label="Merchant" value={filters.merchantId} onChange={(e) => updateFilters({ merchantId: e.target.value })}>
+                <option value="">All merchants</option>
                 {data.merchants.map((m) => (
                   <option key={m.id} value={m.id}>
                     {m.name}
                   </option>
                 ))}
               </SelectField>
-              <SelectField label="Client" value={filters.customerId} onChange={(e) => updateFilters({ customerId: e.target.value })}>
-                <option value="">Tous les clients</option>
+              <SelectField label="Customer" value={filters.customerId} onChange={(e) => updateFilters({ customerId: e.target.value })}>
+                <option value="">All customers</option>
                 {[...data.customers]
-                  .sort((a, b) => a.name.localeCompare(b.name, "fr"))
+                  .sort((a, b) => a.name.localeCompare(b.name, "en"))
                   .map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
                     </option>
                   ))}
               </SelectField>
-              <AmountFilter label="Montant min." valueMinor={filters.minAmount} onApply={(v) => updateFilters({ minAmount: v })} />
-              <AmountFilter label="Montant max." valueMinor={filters.maxAmount} onApply={(v) => updateFilters({ maxAmount: v })} />
+              <AmountFilter label="Min. amount" valueMinor={filters.minAmount} onApply={(v) => updateFilters({ minAmount: v })} />
+              <AmountFilter label="Max. amount" valueMinor={filters.maxAmount} onApply={(v) => updateFilters({ maxAmount: v })} />
             </div>
           </div>
         )}
@@ -274,20 +275,20 @@ export function Transactions() {
 
       <Section bodyClassName="p-0" className="overflow-hidden">
         {data.transactions.length === 0 ? (
-          <EmptyState icon="transactions" title="Aucune transaction" action={canCreate ? <Button variant="primary" icon="plus" onClick={() => setTestOpen(true)}>Créer une transaction de test</Button> : undefined}>
-            Créez une demande de paiement ou une transaction de test pour commencer.
+          <EmptyState icon="transactions" title="No transactions" action={canCreate ? <Button variant="primary" icon="plus" onClick={() => setTestOpen(true)}>Create a test transaction</Button> : undefined}>
+            Create a payment request or a test transaction to get started.
           </EmptyState>
         ) : sorted.length === 0 ? (
           <EmptyState
             icon="search"
-            title="Aucune transaction ne correspond"
+            title="No transaction matches"
             action={
               <Button icon="x" onClick={() => setParams(new URLSearchParams(), { replace: true })}>
-                Réinitialiser les filtres
+                Reset filters
               </Button>
             }
           >
-            Essayez une autre recherche, élargissez la période (« {period.label} ») ou retirez des filtres.
+            Try another search, widen the period ("{period.label}") or remove some filters.
           </EmptyState>
         ) : (
           <>
@@ -297,7 +298,7 @@ export function Transactions() {
               columns={["customer", "merchant", "method", "order"]}
               sort={{ key: query.sort, dir: query.dir }}
               onSort={onSort}
-              caption={`Liste des transactions, page ${page.page} sur ${page.pageCount}`}
+              caption={`Transaction list, page ${page.page} of ${page.pageCount}`}
             />
             <Pagination page={page} onPage={(n) => update({ page: n }, true)} label="transactions" />
           </>

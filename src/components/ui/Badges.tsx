@@ -10,7 +10,7 @@ const toneClass: Record<StatusTone, string> = {
   neutral: "badge-neutral",
 };
 
-/** Pastille de couleur + libellé : la couleur n'est jamais le seul vecteur d'information. */
+/** Color dot + label: color is never the only carrier of information. */
 function Dot() {
   return <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-current" />;
 }
@@ -34,9 +34,9 @@ export function StatusBadge({ status }: { status: PaymentStatus }) {
 }
 
 const MERCHANT_STATUS: Record<MerchantStatus, { label: string; tone: StatusTone }> = {
-  active: { label: "Actif", tone: "success" },
-  under_review: { label: "En revue", tone: "pending" },
-  suspended: { label: "Suspendu", tone: "danger" },
+  active: { label: "Active", tone: "success" },
+  under_review: { label: "Under review", tone: "pending" },
+  suspended: { label: "Suspended", tone: "danger" },
 };
 export const MERCHANT_STATUS_LABEL = Object.fromEntries(
   Object.entries(MERCHANT_STATUS).map(([k, v]) => [k, v.label])
@@ -48,9 +48,9 @@ export function MerchantStatusBadge({ status }: { status: MerchantStatus }) {
 }
 
 const SETTLEMENT_STATUS: Record<SettlementStatus, { label: string; tone: StatusTone }> = {
-  pending: { label: "En attente", tone: "pending" },
-  settled: { label: "Réglé (simulé)", tone: "success" },
-  failed: { label: "Échoué (simulé)", tone: "danger" },
+  pending: { label: "Pending", tone: "pending" },
+  settled: { label: "Settled (simulated)", tone: "success" },
+  failed: { label: "Failed (simulated)", tone: "danger" },
 };
 export const SETTLEMENT_STATUS_LABEL = Object.fromEntries(
   Object.entries(SETTLEMENT_STATUS).map(([k, v]) => [k, v.label])
@@ -63,7 +63,7 @@ export function SettlementStatusBadge({ status }: { status: SettlementStatus }) 
 
 export function SandboxBadge({ label = "Sandbox" }: { label?: string }) {
   return (
-    <span className="badge badge-sandbox" title="Environnement de démonstration : aucun paiement réel">
+    <span className="badge badge-sandbox" title="Demonstration environment: no real payment">
       <span aria-hidden="true">⚗</span>
       {label}
     </span>

@@ -25,7 +25,7 @@ interface CommonProps {
 }
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>, CommonProps {
-  /** Affiche un indicateur et désactive le bouton pendant une action. */
+  /** Shows an indicator and disables the button during an action. */
   loading?: boolean;
 }
 

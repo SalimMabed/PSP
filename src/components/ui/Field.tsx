@@ -12,7 +12,7 @@ interface FieldShellProps {
   hint?: string;
   error?: string;
   required?: boolean;
-  /** Masque visuellement le libellé (reste lu par les lecteurs d'écran). */
+  /** Visually hides the label (still read by screen readers). */
   hideLabel?: boolean;
   className?: string;
 }
