@@ -1,5 +1,7 @@
 # PSP Sandbox — Payment platform MVP (Algeria)
 
+[![CI](https://github.com/SalimMabed/PSP/actions/workflows/ci.yml/badge.svg)](https://github.com/SalimMabed/PSP/actions/workflows/ci.yml)
+
 Working MVP of a **PSP (Payment Service Provider)** for the Algerian market, built from the author's personal-finance project "Gestion d'argent" (French for "money management"). The source folder was preserved and left unmodified.
 
 > ## ⚠ What this project is — and is not
@@ -45,6 +47,16 @@ The demo data is created automatically on first launch and **persists across pag
 
 The user interface and the documentation are in English. Amounts, numbers and numeric dates keep the Algerian/French display conventions (`12 500,00 DA`, `19/10/2026`, Algiers time UTC+1), and CSV exports use the `;` separator with a decimal comma.
 
+### Deploying the demo
+
+The application is a static site (no server needed): `npm run build` produces `dist/`.
+
+- **GitHub Pages (provided workflow):** in the repository settings, set **Pages → Source** to **GitHub Actions**, then run the **Deploy demo to GitHub Pages** workflow from the Actions tab. The site is served from `https://<user>.github.io/PSP/`; the workflow builds with `VITE_BASE=/PSP/` and adds a `404.html` copy of the entry point so deep links and page refreshes keep working.
+- **Any other static host (Vercel, Netlify, Cloudflare Pages…):** publish `dist/` at the root of a domain and rewrite every unknown path to `index.html` (single-page-app fallback).
+- **Sub-path locally:** `VITE_BASE=/PSP/ npm run build`. Without `VITE_BASE`, the app is served from `/`.
+
+Each visitor gets their own demo data in their own browser (IndexedDB): nothing is shared or sent to a server.
+
 ## Architecture
 
 ```
@@ -69,6 +81,7 @@ src/
   pages/       One page per route
   test/        Factories, app rendering, user-journey tests (jsdom + fake-indexeddb)
 docs/          API.md, PRODUCTION-CHECKLIST.md, AUDIT.md, TASKS.md
+.github/       CI workflow (typecheck, tests, build) and manual GitHub Pages deployment
 ```
 
 Routes: `/` (dashboard), `/transactions`, `/transactions/:id`, `/collect`, `/pay/:token` (hosted payment page), `/customers`, `/customers/:id`, `/merchants`, `/merchants/:id`, `/settlements`, `/developers`, `/settings`.

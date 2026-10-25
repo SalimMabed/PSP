@@ -1,0 +1,57 @@
+name: Deploy demo to GitHub Pages
+
+# Manual trigger: the demo is only published when someone runs this workflow
+# (Actions tab → "Deploy demo to GitHub Pages" → Run workflow).
+# One-time setup: Settings → Pages → Source: "GitHub Actions".
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
+      # The app is served from https://<user>.github.io/<repository>/
+      - name: Build
+        run: npm run build
+        env:
+          VITE_BASE: /${{ github.event.repository.name }}/
+
+      # GitHub Pages has no SPA fallback: unknown paths (deep links, page refresh) get 404.html,
+      # which is a copy of the app entry point so React Router can take over.
+      - name: Add the SPA fallback
+        run: cp dist/index.html dist/404.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -13,6 +13,7 @@ The personal-finance project was turned into a **payment platform (PSP) MVP in s
 - Customers, merchants, simulated settlements, developer area (illustrative REST API, signed webhooks), settings (administrator / operator roles, audit log, demo reset).
 - Quality: 235 automated tests, TypeScript check and production build passing, 0 accessibility violations detected by the automated tool.
 - Documentation: `README.md`, `docs/API.md`, `docs/PRODUCTION-CHECKLIST.md`, `docs/AUDIT.md`.
+- Continuous integration (GitHub Actions: typecheck, tests, build on every push and pull request) and a manual GitHub Pages deployment workflow for the live demo (see the README, "Deploying the demo").
 
 **Important:** everything is **simulated**. No real payment, no connected bank, no license or compliance claimed. Browser-side checks are not server-side security.
 
@@ -36,7 +37,7 @@ npm test         # 235 tests
 | [T4](https://github.com/SalimMabed/PSP/issues/4) | Study of real integration options (card payments, bank, acquirer) | Research | Medium | to be defined | To do |
 | [T5](https://github.com/SalimMabed/PSP/issues/5) | Backend design: data model and server API | Design | Hard | to be defined | To do |
 | [T6](https://github.com/SalimMabed/PSP/issues/6) | Design of authentication, roles and API keys | Design | Hard | to be defined | To do |
-| [T7](https://github.com/SalimMabed/PSP/issues/7) | GitHub Actions continuous integration | Code | Easy | to be defined | To do |
+| [T7](https://github.com/SalimMabed/PSP/issues/7) | GitHub Actions continuous integration | Code | Easy | Salim Mabed | Done |
 | [T8](https://github.com/SalimMabed/PSP/issues/8) | Missing features: expiry, disputes, Arabic / RTL | Code | Medium to hard | to be defined | To do |
 | [T9](https://github.com/SalimMabed/PSP/issues/9) | Prepare the demonstration and the presentation | Communication | Easy | to be defined | To do |
 

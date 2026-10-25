@@ -6,6 +6,8 @@ import { fileURLToPath } from "node:url";
 // The PWA / service worker of the source project is deliberately not carried over:
 // an offline cache makes no sense for a sandbox whose data changes on every action.
 export default defineConfig({
+  // "/" by default; set VITE_BASE=/PSP/ to serve the app from a sub-path (GitHub Pages).
+  base: process.env.VITE_BASE ?? "/",
   plugins: [react()],
   resolve: {
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },

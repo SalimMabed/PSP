@@ -13,6 +13,7 @@ import { formatDateTime } from "@/domain/period";
 import { refundableAmount } from "@/domain/refunds";
 import { FAILURE_LABEL, METHOD_LABEL, REFUND_REASON_LABEL, STATUS_LABEL, STATUS_TONE } from "@/domain/status";
 import { isOpen } from "@/domain/status";
+import { checkoutLink } from "@/utils/links";
 
 const toneDot: Record<string, string> = {
   success: "bg-success",
@@ -46,7 +47,7 @@ export function TransactionDetail() {
   const settlement = tx.settlementId ? data.settlements.find((s) => s.id === tx.settlementId) : undefined;
   const remaining = refundableAmount(tx);
   const open = isOpen(tx.status);
-  const checkoutUrl = `${window.location.origin}/pay/${tx.checkoutToken}`;
+  const checkoutUrl = checkoutLink(tx.checkoutToken);
   const feeKept = tx.fee - refunds.reduce((a, r) => a + r.feeReversed, 0);
   const net = tx.amount - tx.refunded - feeKept;
   const captured = tx.paidAt !== undefined;

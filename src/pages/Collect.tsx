@@ -14,8 +14,9 @@ import { isOpen } from "@/domain/status";
 import type { PaymentFormValues } from "@/domain/validation";
 import type { Transaction } from "@/domain/types";
 import { usePspStore } from "@/store/usePspStore";
+import { checkoutLink } from "@/utils/links";
 
-const checkoutUrl = (t: Transaction) => `${window.location.origin}/pay/${t.checkoutToken}`;
+const checkoutUrl = (t: Transaction) => checkoutLink(t.checkoutToken);
 
 export function Collect() {
   useDocumentTitle("Collect payments");
