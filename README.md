@@ -55,6 +55,7 @@ The application is a static site (no server needed): `npm run build` produces `d
 
 - **GitHub Pages (provided workflow):** in the repository settings, set **Pages → Source** to **GitHub Actions**, then run the **Deploy demo to GitHub Pages** workflow from the Actions tab. The site is served from `https://<user>.github.io/PSP/`; the workflow builds with `VITE_BASE=/PSP/` and adds a `404.html` copy of the entry point so deep links and page refreshes keep working.
 - **Any other static host (Vercel, Netlify, Cloudflare Pages…):** publish `dist/` at the root of a domain and rewrite every unknown path to `index.html` (single-page-app fallback).
+- **Apache / LiteSpeed hosting (cPanel, for example under `https://example.com/psp/`):** build with `VITE_BASE=/psp/ npm run build` and upload the content of `dist/` (including the hidden `.htaccess`, which provides the single-page-app fallback) into the `psp` folder. On a server that ignores `.htaccess` (plain nginx), add `try_files $uri $uri/ /psp/index.html;` to the location block.
 - **Sub-path locally:** `VITE_BASE=/PSP/ npm run build`. Without `VITE_BASE`, the app is served from `/`.
 
 Each visitor gets their own demo data in their own browser (IndexedDB): nothing is shared or sent to a server.

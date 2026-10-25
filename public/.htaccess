@@ -1,0 +1,9 @@
+# Single-page-app fallback for Apache / LiteSpeed hosting (for example cPanel):
+# any URL that is not an existing file or folder is served by the app entry point,
+# so deep links and page refreshes work. Ignored by other servers and by GitHub Pages.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.html [L]
+</IfModule>
