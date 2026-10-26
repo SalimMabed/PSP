@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/SalimMabed/PSP/actions/workflows/ci.yml/badge.svg)](https://github.com/SalimMabed/PSP/actions/workflows/ci.yml)
 
-**Live demo:** https://salimmabed.github.io/PSP/ — sandbox with fictitious data, nothing to install (data stays in your own browser).
+**Live demo:** https://salimmabed.com/psp/ (mirror: https://salimmabed.github.io/PSP/) — sandbox with fictitious data, nothing to install (data stays in your own browser).
 
 Working MVP of a **PSP (Payment Service Provider)** for the Algerian market, built from the author's personal-finance project "Gestion d'argent" (French for "money management"). The source folder was preserved and left unmodified.
 
