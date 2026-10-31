@@ -12,6 +12,17 @@ Working MVP of a **PSP (Payment Service Provider)** for the Algerian market, bui
 > - **No license, no certification and no regulatory compliance** is claimed. Do not use it to collect money.
 > - Browser-side checks and local storage (IndexedDB) **are not server-side security**.
 
+## Try it in 3 minutes (for judges)
+
+Open **https://salimmabed.com/psp/** — nothing to install, no account. Everything is simulated and the data lives in your own browser (use **Settings → Demo data → Reset the demo** to start clean).
+
+1. **Dashboard** — volume, success rate, refunds, computed alerts; the status tiles filter the list.
+2. **Collect → New payment request** — choose a merchant, enter an amount (for example 25 000), choose a customer, create the request.
+3. **Open the payment page** — the hosted page has no card field, only fictitious sandbox methods; pick one and click **Simulate a success**.
+4. **Back in the back office** — on the transaction page, click **Refund**: a reason is mandatory, a refund above the remaining balance is refused (the maximum is shown), and the status moves to *Partially refunded* then *Refunded*.
+5. **Settlements → Generate batches** — simulated batches; the consistency line always adds up (settled + in progress + to settle = net).
+6. **Developers** and **Settings → Audit log** — illustrative REST API with idempotency and HMAC-signed webhooks; every action is logged. The profile menu (top right) switches between *Administrator* and *Operator* to show the different rights.
+
 ## Features
 
 | Module | Content |
@@ -131,6 +142,15 @@ The **11 original tests** of the source application were kept and ported: 5 date
 - **Settlements**: internal accounting simulation, with no bank reconciliation and no real settlement delays.
 - **Functional limits**: a single currency (DZD), no expiry of payment requests, no disputes (chargebacks), no multi-organization support, no server-side pagination (everything is loaded in memory: suitable for a few hundred rows).
 - **Accessibility**: keyboard navigation, labels, ARIA roles, skip link, focus management; automated axe-core audit with no violation; text contrast ≥ 4.5:1 (computed on the palette) and graphical elements ≥ 3:1. The automated audit does not replace a test with a real screen reader, which has not been done.
+
+## Team and roles
+
+- **Salim Mabed** — author of the PSP MVP: turned his personal-finance app into this payment-platform simulator (domain logic, interface, 235 automated tests, documentation, continuous integration and deployment of the live demo).
+- **Mohamed Haddou** — shared the Bank of Algeria regulation 25-02 that was used to frame the project.
+
+**Origin of the project:** it started from an earlier personal-finance application ("Gestion d'argent"), reworked during the programme into a PSP sandbox (see [docs/AUDIT.md](docs/AUDIT.md) for what was kept and changed).
+
+**Use of AI:** the code, tests, translations and documentation were written with heavy assistance from Claude Code (Anthropic); the results quoted in this README were run and checked.
 
 ## Contributing
 

@@ -316,9 +316,11 @@ export function Developers() {
             <li key={t}>{t}</li>
           ))}
         </ul>
-        <p className="m-0 mt-4 flex items-center gap-2 text-[13px] text-ink-muted">
-          <Icon name="info" size={15} />
+        <p className="m-0 mt-4 flex items-start gap-2 text-[13px] text-ink-muted">
+          <Icon name="info" size={15} className="mt-0.5 shrink-0" />
+          <span className="min-w-0">
           The details are in <code className="rounded bg-ivory-soft px-1.5 py-0.5 text-[12.5px]">docs/PRODUCTION-CHECKLIST.md</code> and <code className="rounded bg-ivory-soft px-1.5 py-0.5 text-[12.5px]">docs/API.md</code> in the repository.
+          </span>
         </p>
       </Section>
     </div>
