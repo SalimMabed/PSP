@@ -152,6 +152,10 @@ The **11 original tests** of the source application were kept and ported: 5 date
 
 **Use of AI:** the code, tests, translations and documentation were written with heavy assistance from Claude Code (Anthropic); the results quoted in this README were run and checked.
 
+## License
+
+The source code is released under the [MIT License](LICENSE). This is a software copyright license only: it has nothing to do with the regulatory licenses required to operate a real payment business, which this project does not hold (see the notice at the top of this file).
+
 ## Contributing
 
 The remaining tasks (tests, legal research, backend design, CI, demo…) are listed in [docs/TASKS.md](docs/TASKS.md) and tracked in the [GitHub issues](https://github.com/SalimMabed/PSP/issues).
